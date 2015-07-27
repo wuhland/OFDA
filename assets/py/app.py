@@ -1,4 +1,4 @@
-from bottle import route, run, template, post, request 
+from bottle import Bottle, run 
 from bs4 import BeautifulSoup
 import sys
 import os
@@ -6,38 +6,37 @@ import urllib2
 import csv
 import datetime
 
-
-@route('/content')
+app = Bottle()
+@app.route('/content')
 def input():
-    return
-        
-         <p> Hello I am going to take scrape html from the impact blog \n so that it can be hosted on the webmap \n\n please enter the country this content pertains too as well as the url for the impact-blog post </p>  
-        <form action='/input' method='post'>
-            Country: <input name='country' type='text' />
-            URL: <input name='url' type='text' />
-            <input value='Submit' type='submit' />
-        </form>
-
+	return '''
+		<p>Please enter the url of the content on usaid.gov and the country the content pertains to. </p>
+		<form action='/input' method='post'>
+			Country: <input name='country' type='text' />
+			URL: <input name='url' type='text' />
+			<input value='Submit' type='submit' />
+		</form>
+	'''
 
 
 def scrape():
 	country = request.forms.get('country').lower()
 	url = request.forms.get('url')
 	
-    with open('ISO.csv') as f:
-        csv_file = csv.reader(f)
-        iso = list(csv_file)
+	with open('ISO.csv') as f:
+		csv_file = csv.reader(f)
+		iso = list(csv_file)
     
-        for row in iso:
-		    row[1] = [x.lower() for x in row[1].strip('[,]').split(',')]
+		for row in iso:
+			row[1] = [x.lower() for x in row[1].strip('[,]').split(',')]
 
-    iso = iso[1:]
+	iso = iso[1:]
  
  
 	for row in iso:
 		if country in row[1]:
 			isocode = row[0]
-	if isocode = None: 
+	if isocode == None: 
 		return "<p>The country you entered is not on our list try a different spalling</p>"
 	
 
@@ -67,4 +66,8 @@ def scrape():
 
 	#writing file
 	target.write(yaml + body)
+
+	return "<p>Content scraped and added to map</p>"
+
+app.run()
 
