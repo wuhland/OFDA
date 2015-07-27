@@ -1,4 +1,4 @@
-from bottle import Bottle, run 
+from bottle import Bottle, run, post, request 
 from bs4 import BeautifulSoup
 import sys
 import os
@@ -7,7 +7,7 @@ import csv
 import datetime
 
 app = Bottle()
-@app.route('/content')
+@app.route('/input')
 def input():
 	return '''
 		<p>Please enter the url of the content on usaid.gov and the country the content pertains to. </p>
@@ -18,7 +18,7 @@ def input():
 		</form>
 	'''
 
-
+@app.route('/input', method='POST')
 def scrape():
 	country = request.forms.get('country').lower()
 	url = request.forms.get('url')
@@ -32,11 +32,11 @@ def scrape():
 
 	iso = iso[1:]
  
- 
+	isocode = "" 
 	for row in iso:
 		if country in row[1]:
 			isocode = row[0]
-	if isocode == None: 
+	if isocode == "": 
 		return "<p>The country you entered is not on our list try a different spalling</p>"
 	
 
@@ -69,5 +69,5 @@ def scrape():
 
 	return "<p>Content scraped and added to map</p>"
 
-app.run()
+app.run(reloader=True)
 
