@@ -1,3 +1,14 @@
+
+#!/usr/bin/env python
+#
+# Copyright (C) 2013 Federico Ceratto and others, see AUTHORS file.
+# Released under LGPLv3+ license, see LICENSE.txt
+#
+# Cork example web application
+#
+# The following users are already available:
+#  admin/admin, demo/demo
+
 from bottle import Bottle, run, post, request
 from bs4 import BeautifulSoup
 import sys
@@ -16,7 +27,7 @@ log = logging.getLogger(__name__)
 bottle.debug(True)
 
 # Use users.json and roles.json in the local example_conf directory
-aaa = Cork('users', email_sender='saegeritup@gmail.com', smtp_url='smtp://smtp.magnet.ie')
+aaa = Cork('users', email_sender='saegeritup@gmail.com', smtp_url='smtp.gmail.com')
 
 app = bottle.app()
 session_opts = {
@@ -258,7 +269,7 @@ def main():
 	#Start the Bottle webapp
 
 	bottle.debug(True)
-	bottle.run(app=app, quite=False, reloader=True)
+	bottle.run(app=app, host="0.0.0.0", port=8080, quite=False, reloader=True)
 
 if __name__ == "__main__":
 	main()
