@@ -1450,7 +1450,7 @@ d3.json("assets/data/countries_min.topo.json", function(error, us) {
 			
 
 
-	d3.json("data/json/DC.geojson", function (error, dc)  {
+	d3.json("assets/data/DC.json", function (error, dc)  {
 	g.append("g")
 		.selectAll("path")
 		.data(dc.features)

@@ -9,7 +9,7 @@
 # The following users are already available:
 #  admin/admin, demo/demo
 
-from bottle import Bottle, run, post, request
+from bottle import Bottle, run, post, request, static_file
 from bs4 import BeautifulSoup
 import sys
 import os
@@ -210,6 +210,28 @@ def input():
 			<input value='Submit' type='submit' />
 		</form>
 	'''
+
+@bottle.route('/assets/js/<filename>')
+def serve_js(filename):
+	return static_file(filename, root='../js')
+
+@bottle.route('/assets/data/<filename>')
+def serve_js(filename):
+	return static_file(filename, root='../data')
+
+@bottle.route('/assets/img/<filename>')
+def serve_js(filename):
+	return static_file(filename, root='../img')
+
+@bottle.route('/assets/css/<filename:re:.*\.css>')
+def serve_js(filename):
+	return static_file(filename, root='../css')
+
+
+@bottle.route('/<filename:re:.*\.html>')
+def serve_map(filename):
+	return static_file(filename, root='../../')
+
 
 
 @bottle.route('/input', method='POST')
