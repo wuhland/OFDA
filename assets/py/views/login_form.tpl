@@ -7,8 +7,8 @@
       <h2>Login</h2>
       <p>Please insert your credentials:</p>
       <form action="login" method="post" name="login">
-          <input type="text" name="username" />
-          <input type="password" name="password" />
+          <input type="text" name="username" value="username" />
+          <input type="password" name="password" value="password" />
 
           <br/><br/>
           <button type="submit" > OK </button>
@@ -21,7 +21,7 @@
       <p>Please insert your credentials:</p>
       <form action="register" method="post" name="signup">
           <input type="text" name="username" value="username"/>
-          <input type="password" name="password" />
+          <input type="password" name="password" value="password" />
           <input type="text" name="email_address" value="email address"/>
 
           <br/><br/>

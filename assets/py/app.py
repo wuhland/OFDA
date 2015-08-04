@@ -27,7 +27,7 @@ log = logging.getLogger(__name__)
 bottle.debug(True)
 
 # Use users.json and roles.json in the local example_conf directory
-aaa = Cork('users', email_sender='saegeritup@gmail.com', smtp_url='smtp.gmail.com')
+aaa = Cork('users', email_sender='ofdamap@gmail.com', smtp_url='starttls://ofdamap:vbxnlrzbqmkfaezc@smtp.gmail.com:587')
 
 app = bottle.app()
 session_opts = {
@@ -39,7 +39,6 @@ session_opts = {
     'session.validate_key': True,
 }
 app = SessionMiddleware(app, session_opts)
-
 
 # #  Bottle methods  # #
 
@@ -202,7 +201,7 @@ def sorry_page():
 
 def input():
 	
-	aaa.require(role='user', fail_redirect='/login')
+	aaa.require(role='admin', fail_redirect='/login')
 	return '''
 		<p>Please enter the url of the content on usaid.gov and the country the content pertains to. </p>
 		<form action='/input' method='post'>
