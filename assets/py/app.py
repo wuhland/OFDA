@@ -4,8 +4,6 @@
 # Copyright (C) 2013 Federico Ceratto and others, see AUTHORS file.
 # Released under LGPLv3+ license, see LICENSE.txt
 #
-# Cork example web application
-#
 # The following users are already available:
 #  admin/admin, demo/demo
 
@@ -20,7 +18,7 @@ import bottle
 from beaker.middleware import SessionMiddleware
 from cork import Cork
 import logging
-
+import json
 
 logging.basicConfig(format='localhost - - [%(asctime)s] %(message)s', level=logging.DEBUG)
 log = logging.getLogger(__name__)
@@ -211,20 +209,26 @@ def input():
 		</form>
 	'''
 
+
+@bottle.route('/assets/data/<filename>')
+def serve_geojson(filename):
+	return static_file(filename, root='../data')
+
 @bottle.route('/assets/js/<filename>')
 def serve_js(filename):
 	return static_file(filename, root='../js')
 
-@bottle.route('/assets/data/<filename>')
-def serve_js(filename):
-	return static_file(filename, root='../data')
+@bottle.route('/<filename:re:.*\.json>')
+def serve_json(filename):
+	return static_file(filename, root='./')
+
 
 @bottle.route('/assets/img/<filename>')
-def serve_js(filename):
+def serve_img(filename):
 	return static_file(filename, root='../img')
 
 @bottle.route('/assets/css/<filename:re:.*\.css>')
-def serve_js(filename):
+def serve_css(filename):
 	return static_file(filename, root='../css')
 
 
@@ -260,29 +264,45 @@ def scrape():
 	html_doc = urllib2.urlopen(str(url), timeout=90)
 
 	soup = BeautifulSoup(html_doc, 'html.parser') 
-
-	body = soup.find("div", class_="post").prettify(formatter='html')
+	html_doc.close()
+	body = soup.find("div", class_="post").prettify(formatter='html').encode("ascii","xmlcharrefreplace")
 
 	if url[-1] == '/':
 		url = url[:-1]
 
-	filenm = datetime.datetime.now().strftime("%Y-%m-%d") + "-" + url.split('/')[-1].replace(' ','_')
+	filenm = url.split('/')[-1].replace(' ','_')
 
 
 
 
-	target = open("../../_posts/" + filenm + '.md', 'w')
+	target = open("../../_posts/" + filenm + '.html', 'w')
+	
+	#writing file
+	target.write(body)
 
 	arglist = ['country: ' + isocode]
+	date = str(datetime.datetime.now().strftime("%Y-%m-%d"))
+	#writing json
+	control = []
+	with open('control.json','r') as j:
+		control = json.loads(j.read())
+		
+#iterates through json to see if the country is use and if so if the same url has already been added. If country yes but url no add appropriate data to json. Need to write json file with html:<name of html file>
+	if control.get(isocode):
+		if control[isocode].get(filenm):
+			return '''
+				<p>You already added this url, please remove from admin page if you would like to reload the content for some reason</p>
+				<br><br>
+				<a href='/admin'>Admin</a>
+				'''
+		else:
+			 control[isocode] = filenm
+	else:
+		 control.update({isocode :{ filenm : {'date' : date }}}) 
+	
+	with open('control.json','r+b') as j:
+		j.write(json.dumps(control))
 
-	yaml = '---\n'
-	for arg in arglist: 
-		yaml += arg + '\n'
-
-	yaml += '---\n'
-
-	#writing file
-	target.write(yaml + body)
 
 	return "<p>Content scraped and added to map</p>"
 
@@ -290,7 +310,8 @@ def main():
 	#Start the Bottle webapp
 
 	bottle.debug(True)
-	bottle.run(app=app, host="0.0.0.0", port=8080, quite=False, reloader=True)
+#	bottle.run(app=app, host="0.0.0.0", port=8080, quite=False, reloader=True)
+	bottle.run(app=app, port=8080, quite=False, reloader=True)
 
 if __name__ == "__main__":
 	main()
