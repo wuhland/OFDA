@@ -2,7 +2,7 @@ var featuredJSON;
 
 d3.json("/control.json", function(error, json) {
 	if (error) return console.warn(error);
-	featuredJSOM = json;
+	featuredJSON = json;
 	visualizeit();
 });
 
@@ -100,7 +100,7 @@ function visualizeit() {
 		//var featured = ["PHL","JAM","SDS","HTI"];
 		//var featuredMap = d3.set(featured);
 		var featuredMap = d3.map(featuredJSON);
-
+		console.log(featuredMap);
 		function httpGet(theURL){
 			var xmlHttp = null;
 				

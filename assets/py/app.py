@@ -38,6 +38,26 @@ session_opts = {
 }
 app = SessionMiddleware(app, session_opts)
 
+# reads global bariable which controls map functionality
+control = []
+with open('control.json','r') as j:
+	control = json.loads(j.read())
+
+checkdict={}
+with open('ISO.csv') as f:
+	csv_file = csv.reader(f)
+	checklist = list(csv_file)
+ 
+	for row in checklist:
+		row[1] = [x.lower() for x in row[1].strip('[,]').split(',')]
+		
+
+checklist = checklist[1:]
+
+for x in checklist:
+	checkdict[x[0]]=x[1]
+
+
 # #  Bottle methods  # #
 
 def postd():
@@ -196,18 +216,25 @@ def sorry_page():
 
 
 @bottle.route('/input')
-
+@bottle.view('content_input')
 def input():
 	
 	aaa.require(role='admin', fail_redirect='/login')
-	return '''
-		<p>Please enter the url of the content on usaid.gov and the country the content pertains to. </p>
-		<form action='/input' method='post'>
-			Country: <input name='country' type='text' />
-			URL: <input name='url' type='text' />
-			<input value='Submit' type='submit' />
-		</form>
-	'''
+	return dict(
+		current_user=aaa.current_user,
+		json=control,
+		check=checkdict
+	)
+		
+#	return '''
+#		<p>Please enter the url of the content on usaid.gov and the country the content pertains to. </p>
+#		<form action='/input' method='post'>
+#			Country: <input name='country' type='text' />
+#			URL: <input name='url' type='text' />
+#			<input value='Submit' type='submit' />
+#		</form>
+#	'''
+	
 
 
 @bottle.route('/assets/data/<filename>')
@@ -236,25 +263,14 @@ def serve_css(filename):
 def serve_map(filename):
 	return static_file(filename, root='../../')
 
-
-
 @bottle.route('/input', method='POST')
 
 def scrape():
 	country = request.forms.get('country').lower()
 	url = request.forms.get('url')
 	
-	with open('ISO.csv') as f:
-		csv_file = csv.reader(f)
-		iso = list(csv_file)
-    
-		for row in iso:
-			row[1] = [x.lower() for x in row[1].strip('[,]').split(',')]
-
-	iso = iso[1:]
-	 
 	isocode = "" 
-	for row in iso:
+	for row in checklist:
 		if country in row[1]:
 			isocode = row[0]
 	if isocode == "": 
@@ -273,8 +289,6 @@ def scrape():
 	filenm = url.split('/')[-1].replace(' ','_')
 
 
-
-
 	target = open("../../_posts/" + filenm + '.html', 'w')
 	
 	#writing file
@@ -283,9 +297,6 @@ def scrape():
 	arglist = ['country: ' + isocode]
 	date = str(datetime.datetime.now().strftime("%Y-%m-%d"))
 	#writing json
-	control = []
-	with open('control.json','r') as j:
-		control = json.loads(j.read())
 		
 #iterates through json to see if the country is use and if so if the same url has already been added. If country yes but url no add appropriate data to json. Need to write json file with html:<name of html file>
 	if control.get(isocode):
@@ -311,7 +322,7 @@ def main():
 
 	bottle.debug(True)
 #	bottle.run(app=app, host="0.0.0.0", port=8080, quite=False, reloader=True)
-	bottle.run(app=app, port=8080, quite=False, reloader=True)
+	bottle.run(app=app, host="0.0.0.0", port=8080, quite=False, reloader=True)
 
 if __name__ == "__main__":
 	main()

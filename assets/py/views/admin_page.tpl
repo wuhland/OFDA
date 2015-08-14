@@ -3,7 +3,7 @@
 <head>
 <meta content="text/html; charset=utf-8" http-equiv="content-type">
 <div id='main'>
-    <h2>Cork - Administration page</h2>
+    <h2>Administration page</h2>
     <p>Welcome {{current_user.username}}, your role is: {{current_user.role}},
     access time: {{current_user.session_accessed_time}}</p>
     <div id='commands'>
