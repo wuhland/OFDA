@@ -18,12 +18,12 @@
     </div>
     <div>
       <form action="delete_content" method="post">
-		 <fieldset>
+		 <fieldset name="deleted_content">
       		<legend>Delete content from map</legend>
          		%for c in json:
 	      		<p><b>{{check[c][0]}}</b></p>
 	 	    		%for x in json[c]:
-	         		<p>{{x}} <button type="button" class="close">Delete</button></p>
+	         		<p>{{x}} <button type="button" class="close" name={{x}}>Delete</button></p>
 		    		%end
 		 		%end
 		 		<button type="submit"> OK </button>
@@ -39,8 +39,27 @@
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
     <script>
         // Prevent form submission, send POST asynchronously and parse returned JSON
-        $('form').submit(function() {
+        $('button').click(function() {
+			alert($(this).attr('name'));
+		})
+		$('form').submit(function() {
             z = $(this);
+            $.post($(this).attr('action'), $(this).serialize(), function(j){
+			  console.log($(this).serialize());
+              if (j.ok) {
+                $("div#status").css("background-color", "#f0fff0");
+                $("div#status p").text('Ok.');
+              } else {
+                $("div#status").css("background-color", "#fff0f0");
+                $("div#status p").text(j.msg);
+              }
+              $("div#status").delay(800).fadeOut(500);
+            }, "json");
+            return false;
+		
+        });
+        // Prevent form submission, send POST asynchronously and parse returned JSON
+  /*      $('form').submit(function() {
             $.post($(this).attr('action'), $(this).serialize(), function(j){
               if (j.ok) {
                 $("div#status").css("background-color", "#f0fff0");
@@ -53,6 +72,7 @@
             }, "json");
             return false;
         });
+*/
     </script>
 </div>
 <style>

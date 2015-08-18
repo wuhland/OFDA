@@ -57,7 +57,11 @@ checklist = checklist[1:]
 for x in checklist:
 	checkdict[x[0]]=x[1]
 
+##############trying something
 
+
+		
+#############################
 # #  Bottle methods  # #
 
 def postd():
@@ -235,7 +239,32 @@ def input():
 #		</form>
 #	'''
 	
+@bottle.route('/delete_content')
+def delete_content():
+	try: 
+		for content in post_get('deleted_content'):
+			os.remove('../../_posts/' + content + '.html')
+		if content.get(isocode):
 
+			if control[isocode].get(filenm):
+				if len(control[isocode]) < 2:
+					del control[isocode]
+			else:
+				 del control[isocode][filenm]
+					
+		
+
+		
+
+			with open('control.json','r+b') as j:
+				j.write(json.dumps(control))
+
+			return dict(ok=True, msg='')
+	except Exception, e:
+		return dict(ok=False, msg=e.message)
+
+
+		
 
 @bottle.route('/assets/data/<filename>')
 def serve_geojson(filename):
