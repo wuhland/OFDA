@@ -18,16 +18,15 @@
     </div>
     <div>
       <form action="delete_content" method="post">
-		 <fieldset name="deleted_content">
-      		<legend>Delete content from map</legend>
-         		%for c in json:
-	      		<p><b>{{check[c][0]}}</b></p>
-	 	    		%for x in json[c]:
-	         		<p>{{x}} <button type="button" class="close" name={{x}}>Delete</button></p>
-		    		%end
-		 		%end
-		 		<button type="submit"> OK </button>
-		 </fieldset>	
+      	<legend>Delete content from map</legend>
+			<div>{{json}} </div>
+         	%for c in json:
+	      	<p><b>{{check[c][0]}}</b></p>
+	 	    	%for x in json[c]:
+	         	<p>{{x}} <input type="checkbox" id={{x}} class="check"></p>
+		    	%end
+		 	%end
+		 	<button type="submit"> OK </button>
       </form> 
     </div>
 
@@ -39,10 +38,8 @@
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
     <script>
         // Prevent form submission, send POST asynchronously and parse returned JSON
-        $('button').click(function() {
-			alert($(this).attr('name'));
-		})
 		$('form').submit(function() {
+			debugger;
             z = $(this);
             $.post($(this).attr('action'), $(this).serialize(), function(j){
 			  console.log($(this).serialize());

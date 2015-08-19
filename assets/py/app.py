@@ -243,15 +243,16 @@ def input():
 def delete_content():
 	try: 
 		for content in post_get('deleted_content'):
-			os.remove('../../_posts/' + content + '.html')
-		if content.get(isocode):
-
-			if control[isocode].get(filenm):
-				if len(control[isocode]) < 2:
-					del control[isocode]
-			else:
-				 del control[isocode][filenm]
-					
+			return content
+#			os.remove('../../_posts/' + content + '.html')
+		
+#			for isocode in control:
+#				if control[isocode].get(content): 
+#					if len(control[isocode]) < 2:
+#						del control[isocode]
+#					else:
+#						del control[isocode][content]
+		
 		
 
 		
@@ -351,7 +352,7 @@ def main():
 
 	bottle.debug(True)
 #	bottle.run(app=app, host="0.0.0.0", port=8080, quite=False, reloader=True)
-	bottle.run(app=app, host="0.0.0.0", port=8080, quite=False, reloader=True)
+	bottle.run(app=app, host="localhost", port=8080, quite=False, reloader=True)
 
 if __name__ == "__main__":
 	main()
