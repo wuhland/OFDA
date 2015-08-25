@@ -234,14 +234,6 @@ def input():
 		check=checkdict
 	)
 		
-#	return '''
-#		<p>Please enter the url of the content on usaid.gov and the country the content pertains to. </p>
-#		<form action='/input' method='post'>
-#			Country: <input name='country' type='text' />
-#			URL: <input name='url' type='text' />
-#			<input value='Submit' type='submit' />
-#		</form>
-#	'''
 	
 @bottle.post('/delete_content')
 def delete_content():
@@ -255,18 +247,20 @@ def delete_content():
 #		content = re.sub(bottle.request.json(),'=on','').split('&')
 		string = (post_get("hidden"))
 		files = string.split(",")
-		logging.warning('postcontrol first = ' + str(control))
+		logging.warning('postcontrol first = ' + str(len(control["IRN"]["Story"])))
 		logging.warning(files)
 		for x in files:
 			os.remove('../../_posts/' + x + '.html')
 		
 			for key, value in control.iteritems():
-				if key["Story"].get(x):
-					if len(key["Story"]) < 2:
-						del postcontrol[key]["Story"][x]
+				logging.warning('key = ' + str(control[key]["Story"]))
+				logging.warning(str(key))
+				if control[key]["Story"].get(x):
+					if len(control[key]["Story"]) < 2:
+						del postcontrol[key]
 					else:
 						del postcontrol[key]["Story"][x]
-#		
+		
 		logging.warning('postcontrol after = ' + str(postcontrol))
 
 		
@@ -275,8 +269,8 @@ def delete_content():
 			j.write(json.dumps(postcontrol, ensure_ascii=False).encode('utf8'))
 
 		return dict(ok=True, msg= '')
-	except Exception, e:
-		return dict(ok=False, msg=e.message)
+	except Exception as e:
+		return dict(ok=False, msg=e)
 
 
 		

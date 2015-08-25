@@ -6,10 +6,12 @@
     <h2>Map Content Management</h2>
     <p>Welcome {{current_user.username}}</p>
     <div>
-      <p>Scrape content from Impact Blog:</p>
-      <form action="scrape" method="post">
+      <p><b>Scrape content from Impact Blog:</b></p>
+	  
+      <form action="scrape" method="post" enctype="multipart/form-data">
           <p><label>Country</label> <input type="text" name="country" /></p>
-          <p><label>URL</label> <input type="text" name="url" /></p>
+          <p><label>URL</label> <input type="url" name="url" /></p>
+          <p><label>Summary</label> <textarea  rows="10" cols="50"  name="summary" /></textarea></p>
           <button type="submit" > OK </button>
           <button type="button" class="close"> Cancel </button>
       </form>
@@ -18,8 +20,8 @@
 
     </div>
     <div>
+      <p><b>Delete content from map:</b></p>
       <form action="delete_content" id="delete_content" method="post">
-      	<legend>Delete content from map</legend>
 			<input type="text" id="hidden" name="hidden" style="display: none;"></div>
 			<div>{{json}} </div>
          	%for c in json:
@@ -77,7 +79,7 @@
                 $("div#scrape_status").css("background-color", "#fff0f0");
                 $("div#scrape_status p").text(j.msg);
               }
-              $("div#scrape_status").delay(800).fadeOut(500);
+//              $("div#scrape_status").delay(800).fadeOut(500);
             }, "json");
             return false;
 				
@@ -93,12 +95,13 @@ div#main {
     margin-left: 5em;
     font-size: 80%;
 }
-input {
+input, textarea {
     background: #f8f8f8;
     border: 1px solid #777;
     margin: auto;
 }
 input:hover { background: #fefefe}
+textarea:hover { background: #fefefe}
 label {
   width: 8em;
   float: left;
