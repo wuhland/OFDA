@@ -247,7 +247,6 @@ def delete_content():
 #		content = re.sub(bottle.request.json(),'=on','').split('&')
 		string = (post_get("hidden"))
 		files = string.split(",")
-		logging.warning('postcontrol first = ' + str(len(control["IRN"]["Story"])))
 		logging.warning(files)
 		for x in files:
 			os.remove('../../_posts/' + x + '.html')
