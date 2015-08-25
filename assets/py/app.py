@@ -19,6 +19,8 @@ from beaker.middleware import SessionMiddleware
 from cork import Cork
 import logging
 import json
+import re
+from copy import deepcopy
 
 logging.basicConfig(format='localhost - - [%(asctime)s] %(message)s', level=logging.DEBUG)
 log = logging.getLogger(__name__)
@@ -39,9 +41,7 @@ session_opts = {
 app = SessionMiddleware(app, session_opts)
 
 # reads global bariable which controls map functionality
-control = []
-with open('control.json','r') as j:
-	control = json.loads(j.read())
+
 
 checkdict={}
 with open('ISO.csv') as f:
@@ -224,6 +224,10 @@ def sorry_page():
 def input():
 	
 	aaa.require(role='admin', fail_redirect='/login')
+	control = []
+	with open('control.json','r') as j:
+		control = json.loads(j.read())
+	
 	return dict(
 		current_user=aaa.current_user,
 		json=control,
@@ -239,28 +243,38 @@ def input():
 #		</form>
 #	'''
 	
-@bottle.route('/delete_content')
+@bottle.post('/delete_content')
 def delete_content():
-	try: 
-		for content in post_get('deleted_content'):
-			return content
-#			os.remove('../../_posts/' + content + '.html')
-		
-#			for isocode in control:
-#				if control[isocode].get(content): 
-#					if len(control[isocode]) < 2:
-#						del control[isocode]
-#					else:
-#						del control[isocode][content]
 		
 		
+	try:
+		with open('control.json','r') as j:
+			control = json.loads(j.read())
+			postcontrol = deepcopy(control)
+
+#		content = re.sub(bottle.request.json(),'=on','').split('&')
+		string = (post_get("hidden"))
+		files = string.split(",")
+		logging.warning('postcontrol first = ' + str(control))
+		logging.warning(files)
+		for x in files:
+			os.remove('../../_posts/' + x + '.html')
+		
+			for key, value in control.iteritems():
+				if key["Story"].get(x):
+					if len(key["Story"]) < 2:
+						del postcontrol[key]["Story"][x]
+					else:
+						del postcontrol[key]["Story"][x]
+#		
+		logging.warning('postcontrol after = ' + str(postcontrol))
 
 		
 
-			with open('control.json','r+b') as j:
-				j.write(json.dumps(control))
+		with open('control.json','w') as j:
+			j.write(json.dumps(postcontrol, ensure_ascii=False).encode('utf8'))
 
-			return dict(ok=True, msg='')
+		return dict(ok=True, msg= '')
 	except Exception, e:
 		return dict(ok=False, msg=e.message)
 
@@ -293,66 +307,76 @@ def serve_css(filename):
 def serve_map(filename):
 	return static_file(filename, root='../../')
 
-@bottle.route('/input', method='POST')
-
+@bottle.post('/scrape')
 def scrape():
-	country = request.forms.get('country').lower()
-	url = request.forms.get('url')
+	with open('control.json','r') as j:
+		control = json.loads(j.read())
+	try:
+		country = post_get('country').lower()
+		url = post_get('url')
+		isocode = ""
+		message = ""
+		for row in checklist:
+			if country in row[1]:
+				isocode = row[0]
+		if isocode == "": 
+			message = "The country you entered is not on our list try a different spelling"
 	
-	isocode = "" 
-	for row in checklist:
-		if country in row[1]:
-			isocode = row[0]
-	if isocode == "": 
-		return "<p>The country you entered is not on our list try a different spalling</p>"
+		html_doc = urllib2.urlopen(str(url), timeout=90)
+		
+		message = 'Content scraped and added to map'
+
+		soup = BeautifulSoup(html_doc, 'html.parser') 
+		html_doc.close()
+		body = soup.find("div", class_="post").prettify(formatter='html').encode("ascii","xmlcharrefreplace")
+
+		if url[-1] == '/':
+			url = url[:-1]
+
+		filenm = url.split('/')[-1].replace(' ','_')
+
+		target = open("../../_posts/" + filenm + '.html', 'w')
 	
+		#writing file
+		target.write(body)
+		target.close()
 
-	html_doc = urllib2.urlopen(str(url), timeout=90)
-
-	soup = BeautifulSoup(html_doc, 'html.parser') 
-	html_doc.close()
-	body = soup.find("div", class_="post").prettify(formatter='html').encode("ascii","xmlcharrefreplace")
-
-	if url[-1] == '/':
-		url = url[:-1]
-
-	filenm = url.split('/')[-1].replace(' ','_')
-
-
-	target = open("../../_posts/" + filenm + '.html', 'w')
-	
-	#writing file
-	target.write(body)
-
-	arglist = ['country: ' + isocode]
-	date = str(datetime.datetime.now().strftime("%Y-%m-%d"))
-	#writing json
+		
+		date = str(datetime.datetime.now().strftime("%Y-%m-%d"))
+		param ={'date' : date} 
+		#writing json
 		
 #iterates through json to see if the country is use and if so if the same url has already been added. If country yes but url no add appropriate data to json. Need to write json file with html:<name of html file>
-	if control.get(isocode):
-		if control[isocode].get(filenm):
-			return '''
-				<p>You already added this url, please remove from admin page if you would like to reload the content for some reason</p>
-				<br><br>
-				<a href='/admin'>Admin</a>
-				'''
-		else:
-			 control[isocode] = filenm
-	else:
-		 control.update({isocode :{ filenm : {'date' : date }}}) 
+		if control.get(isocode):
+			if control[isocode]["Story"].get(filenm):
 	
-	with open('control.json','r+b') as j:
-		j.write(json.dumps(control))
+				message = "You already added this url, please remove from admin page if you would like to reload the content for some reason"
+					
+			else:
+			#	control.update({isocode :{ filenm : {'date' : date }}}) 
+				control[isocode]["Story"][filenm] =  param
+		else:
+			 control.update({isocode:{"Story":{filenm:param}}})
+	
+		with open('control.json','r+b') as j:
+			j.write(json.dumps(control, ensure_ascii=False).encode('utf8'))
 
 
-	return "<p>Content scraped and added to map</p>"
+		
+
+		return dict(ok=True, msg='')
+	except Exception, e:
+		return dict(ok=False, msg=e)
+
+	
+
 
 def main():
 	#Start the Bottle webapp
 
 	bottle.debug(True)
-#	bottle.run(app=app, host="0.0.0.0", port=8080, quite=False, reloader=True)
-	bottle.run(app=app, host="localhost", port=8080, quite=False, reloader=True)
+	bottle.run(app=app, host="0.0.0.0", port=8080, quite=False, reloader=True)
+#	bottle.run(app=app, host="localhost", port=8080, quite=False, reloader=True)
 
 if __name__ == "__main__":
 	main()

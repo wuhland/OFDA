@@ -5,29 +5,32 @@
 <div id='main'>
     <h2>Map Content Management</h2>
     <p>Welcome {{current_user.username}}</p>
-    <div id='commands'>
+    <div>
       <p>Scrape content from Impact Blog:</p>
-      <form action="scrape_content" method="post">
+      <form action="scrape" method="post">
           <p><label>Country</label> <input type="text" name="country" /></p>
           <p><label>URL</label> <input type="text" name="url" /></p>
           <button type="submit" > OK </button>
           <button type="button" class="close"> Cancel </button>
       </form>
-      <br />
+	  <div id='scrape_status'><p>Ready.</p></div>
+    <br />
 
     </div>
     <div>
-      <form action="delete_content" method="post">
+      <form action="delete_content" id="delete_content" method="post">
       	<legend>Delete content from map</legend>
+			<input type="text" id="hidden" name="hidden" style="display: none;"></div>
 			<div>{{json}} </div>
          	%for c in json:
 	      	<p><b>{{check[c][0]}}</b></p>
-	 	    	%for x in json[c]:
-	         	<p>{{x}} <input type="checkbox" id={{x}} class="check"></p>
+	 	    	%for x in json[c]["Story"]:
+	         	<p><input type="checkbox" id={{x}} name={{x}} class="check">  {{x}} </p>
 		    	%end
 		 	%end
 		 	<button type="submit"> OK </button>
       </form> 
+	  <div id='delete_status'><p>Ready.</p></div>
     </div>
 
     <div class="clear"></div>
@@ -35,42 +38,51 @@
     <div id="urls">
       <a href="/">index</a> <a href="/logout">logout</a>
     </div>
+	<div class="clear"></div>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
     <script>
+	
         // Prevent form submission, send POST asynchronously and parse returned JSON
-		$('form').submit(function() {
-			debugger;
+		$("form#delete_content").submit(function() {
+			$("div#delete_status").fadeIn(100);
             z = $(this);
-            $.post($(this).attr('action'), $(this).serialize(), function(j){
-			  console.log($(this).serialize());
-              if (j.ok) {
-                $("div#status").css("background-color", "#f0fff0");
-                $("div#status p").text('Ok.');
-              } else {
-                $("div#status").css("background-color", "#fff0f0");
-                $("div#status p").text(j.msg);
-              }
-              $("div#status").delay(800).fadeOut(500);
-            }, "json");
-            return false;
-		
-        });
-        // Prevent form submission, send POST asynchronously and parse returned JSON
-  /*      $('form').submit(function() {
+			var files = [];
+			$(".check:checked").each(function(){
+				files.push($(this).attr("id"));
+			});
+			$("#hidden").val(files.toString());
+
             $.post($(this).attr('action'), $(this).serialize(), function(j){
               if (j.ok) {
-                $("div#status").css("background-color", "#f0fff0");
-                $("div#status p").text('Ok.');
+                $("div#delete_status").css("background-color", "#f0fff0");
+                $("div#delete_status p").text('Ok.');
               } else {
-                $("div#status").css("background-color", "#fff0f0");
-                $("div#status p").text(j.msg);
+                $("div#delete_status").css("background-color", "#fff0f0");
+                $("div#delete_status p").text(j.msg);
               }
-              $("div#status").delay(800).fadeOut(500);
+       //       $("div#status").delay(800).fadeOut(500);
             }, "json");
             return false;
+				
         });
-*/
-    </script>
+		$("form#scrape").submit(function() {
+			$("div#scrape_status").fadeIn(100);
+            z = $(this);
+			console.log($(this).serialize());
+            $.post($(this).attr('action'), $(this).serialize(), function(j){
+              if (j.ok) {
+                $("div#scrape_status").css("background-color", "#f0fff0");
+                $("div#scrape_status p").text('Ok.');
+              } else {
+                $("div#scrape_status").css("background-color", "#fff0f0");
+                $("div#scrape_status p").text(j.msg);
+              }
+              $("div#scrape_status").delay(800).fadeOut(500);
+            }, "json");
+            return false;
+				
+        });
+           </script>
 </div>
 <style>
 div#commands { width: 45%%; float: left}

@@ -348,10 +348,10 @@ function visualizeit() {
 
 				var image = new Image();
 
-				image.onload = function(){
+	/*			image.onload = function(){
 					document.getElementById("tooltipImg").src = 'data/' + "countries" + "/"  + selectionName.toLowerCase() + '/popimg.jpg';};
 					image.src = 'data/' + "countries"  + "/"  + selectionName.toLowerCase() + '/popimg.jpg';
-
+*/
 				tooltip.insert("div")
 					.html(function(){return tagline;}) 
 					.attr("class", "popDetail");
@@ -789,7 +789,7 @@ function visualizeit() {
 						console.log(ThingByName[Name]);
 						} else if (Media === "Story") {
 							
-							text = "<iframe name='iframe1' id='iframe1' src=\"data/countries/" + Country.toLowerCase() + "/" + ThingByName[Name].Name + "\" seamless></iframe>";
+							text = "<iframe name='iframe1' id='iframe1' src=\"../../_posts" + Country.toLowerCase() + "/" + ThingByName[Name].Name + ".html\" seamless></iframe>";
 						} else if (Media === "Infographic") {
 							text = "<img width=\"" + width + "\" height=\"" + (height - 50) + "\"src=\"data/countries/" + Country.toLowerCase() + "/graphic.jpg\"><div style=\"width:100%;position:absolute;background-color:#2b2b2b;opacity:0.5;bottom:0px;\"><span class=\"font\" style=\"color:white;margin-left:5px;\" >PDF version<a style=\"color:#16B0C1;margin:5px;\" target=\"_blank\" href=" + featuredJSON[Country].Infographic[0].Hyperlink + ">here</a></span></div>";
 						} else if (Media === "Gallery") {
