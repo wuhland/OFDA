@@ -21,7 +21,7 @@ import logging
 import json
 import re
 from copy import deepcopy
-
+from collections import OrderedDict
 logging.basicConfig(format='localhost - - [%(asctime)s] %(message)s', level=logging.DEBUG)
 log = logging.getLogger(__name__)
 bottle.debug(True)
@@ -40,8 +40,6 @@ session_opts = {
 }
 app = SessionMiddleware(app, session_opts)
 
-# reads global bariable which controls map functionality
-
 
 checkdict={}
 with open('ISO.csv') as f:
@@ -49,17 +47,18 @@ with open('ISO.csv') as f:
 	checklist = list(csv_file)
  
 	for row in checklist:
-		row[1] = [x.lower() for x in row[1].strip('[,]').split(',')]
+		row[1] = [unicode(x, 'latin-1').lower() for x in row[1].strip('[,]').split(',')]
 		
 
 checklist = checklist[1:]
 
+
+#order dict
+
 for x in checklist:
 	checkdict[x[0]]=x[1]
-
-##############trying something
-
-
+checkdict = OrderedDict(sorted(checkdict.items(), key=lambda t: t[1][0]))
+logging.warning('checkdict = '+ str(checkdict))
 		
 #############################
 # #  Bottle methods  # #
@@ -227,14 +226,30 @@ def input():
 	control = []
 	with open('control.json','r') as j:
 		control = json.loads(j.read())
-	
+		
 	return dict(
 		current_user=aaa.current_user,
 		json=control,
 		check=checkdict
 	)
 		
-	
+@bottle.post('/img_upload')
+def img_upload():
+	try:
+		upload  = request.files.get('popup')
+		name, ext = os.path.splitext(upload.filename)
+		if ext not in ('.png','.jpg','.jpeg','.pdf'):
+			return 'File extension not allowed.'
+
+		save_path = "../img/popup/"
+		upload.save(save_path, "overwrite=True") # appends upload.filename automatically
+
+		return dict(ok=True, msg= '')
+	except Exception as e:
+		return dict(ok=False, msg=e)
+
+
+
 @bottle.post('/delete_content')
 def delete_content():
 		
@@ -247,20 +262,16 @@ def delete_content():
 #		content = re.sub(bottle.request.json(),'=on','').split('&')
 		string = (post_get("hidden"))
 		files = string.split(",")
-		logging.warning(files)
 		for x in files:
 			os.remove('../../_posts/' + x + '.html')
 		
 			for key, value in control.iteritems():
-				logging.warning('key = ' + str(control[key]["Story"]))
-				logging.warning(str(key))
 				if control[key]["Story"].get(x):
 					if len(control[key]["Story"]) < 2:
 						del postcontrol[key]
 					else:
 						del postcontrol[key]["Story"][x]
 		
-		logging.warning('postcontrol after = ' + str(postcontrol))
 
 		
 
@@ -291,6 +302,11 @@ def serve_json(filename):
 def serve_img(filename):
 	return static_file(filename, root='../img')
 
+	
+@bottle.route('/assets/fonts/<filename>')
+def serve_fonts(filename):
+	return static_file(filename, root='../fonts', mimetype='application/x-font-otf')
+
 @bottle.route('/assets/css/<filename:re:.*\.css>')
 def serve_css(filename):
 	return static_file(filename, root='../css')
@@ -305,17 +321,23 @@ def scrape():
 	with open('control.json','r') as j:
 		control = json.loads(j.read())
 	try:
-		country = post_get('country').lower()
-		url = post_get('url')
-		isocode = ""
+		isocode = post_get('country')
+		story_url = post_get('story_url')
+		video_url = post_get('video_url')
+		active = post_get('active')
+		dtype = post_get('disaster_type')
+		video_title = post_get('video_title')
+		summary = post_get('summary')
+		logging.warning('summary = ' + summary + ' dtype = ' + dtype + ' active = ' + active + ' video_url = '+ video_url )
+#		isocode = ""
 		message = ""
-		for row in checklist:
-			if country in row[1]:
-				isocode = row[0]
+#		for row in checklist:
+#			if country in row[1]:
+#				isocode = row[0]
 		if isocode == "": 
 			message = "The country you entered is not on our list try a different spelling"
 	
-		html_doc = urllib2.urlopen(str(url), timeout=90)
+		html_doc = urllib2.urlopen(str(story_url), timeout=90)
 		
 		message = 'Content scraped and added to map'
 
@@ -323,10 +345,10 @@ def scrape():
 		html_doc.close()
 		body = soup.find("div", class_="post").prettify(formatter='html').encode("ascii","xmlcharrefreplace")
 
-		if url[-1] == '/':
-			url = url[:-1]
+		if story_url[-1] == '/':
+			story_url = story_url[:-1]
 
-		filenm = url.split('/')[-1].replace(' ','_')
+		filenm = story_url.split('/')[-1].replace(' ','_')
 
 		target = open("../../_posts/" + filenm + '.html', 'w')
 	
@@ -336,20 +358,36 @@ def scrape():
 
 		
 		date = str(datetime.datetime.now().strftime("%Y-%m-%d"))
-		param ={'date' : date} 
+		story_param ={'date' : date}
+		video_param = {'url' : video_url} 
 		#writing json
 		
 #iterates through json to see if the country is use and if so if the same url has already been added. If country yes but url no add appropriate data to json. Need to write json file with html:<name of html file>
 		if control.get(isocode):
+			if active == "active":
+				control[isocode].update({"active":"active"})
+			else:
+				control[isocode].update({"active":"inactive"})
+			if summary != "":
+				control[isocode]["tagline"] = summary
+			
+			if control[isocode]["Video"].get(video_title):
+				message = "You already added this Video, please remove from admin page if you would like to reload the content for some reason"
+			else:
+				control[isocode]["Video"][video_title] = video_param
 			if control[isocode]["Story"].get(filenm):
 	
 				message = "You already added this url, please remove from admin page if you would like to reload the content for some reason"
 					
 			else:
 			#	control.update({isocode :{ filenm : {'date' : date }}}) 
-				control[isocode]["Story"][filenm] =  param
+				control[isocode]["Story"][filenm] =  story_param
 		else:
-			 control.update({isocode:{"Story":{filenm:param}}})
+			control.update({isocode:{"Story":{filenm:story_param},"Video":{video_title:video_param},"tagline":summary, "cat":dtype}})
+			if active == "active":
+				control[isocode].update({"active":"active"})
+			else:
+				control[isocode].update({"active":"inactive"})
 	
 		with open('control.json','r+b') as j:
 			j.write(json.dumps(control, ensure_ascii=False).encode('utf8'))

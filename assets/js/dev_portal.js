@@ -1054,15 +1054,34 @@ function visualizeit() {
 									});
 		}
 
-
+		
+		function getMaxOfArray(numArray) {
+			return Math.max.apply(null,numArray);
+		}
+		function getMinOfArray(numArray) {
+			return Math.min.apply(null,numArray);
+		}
+			
 		function get_xyz(d) {
-			var bounds = path.bounds(d);
+			var bounds;
+			if (featuredJSON[d.id]["catID"]) {
+				var left = [], topp = [],right = [], bottom=[];
+				d3.selectAll(featuredJSON[featuredJSON[d.id]["catID"]].countries).each(function (d) {
+					var x = path.bounds(d);
+					left.push(x[0][0]);
+					right.push(x[1][0]);
+					topp.push(x[0][1]);
+					bottom.push(x[1][1]);
+				})
+				bounds = [[getMinOfArray(left),getMaxOfArray(topp)],[getMaxOfArray(right),getMinOfArray(bottom)]];
+			} else {
+ 
+				bounds = path.bounds(d);
+			}
 			var w_scale = (bounds[1][0] - bounds[0][0]) / width;
 			var h_scale = (bounds[1][1] - bounds[0][1]) / height;
 			var z = 0.5 / Math.max(w_scale, h_scale);
-		//	var z = .96 / Math.max(w_scale, h_scale);
 			var x = (bounds[1][0] + bounds[0][0]) / 2;
-		//	var y = (bounds[1][1] + bounds[0][1]) / 2 + (height / z / 6);
 			var y = (bounds[1][1] + bounds[0][1]) / 2 + (height / z / 50);
 			return [x, y, z];
 		}
