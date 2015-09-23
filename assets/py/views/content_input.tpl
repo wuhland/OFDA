@@ -24,27 +24,38 @@
       <p><b>Add Content To Map:</b></p>
   
       	<form action="scrape" method="post">
-  		<p><label>Active Disaster</label> <input type="checkbox" name="active" value="active"></p>
-  		<p><label>Disaster Type</label><input id="type_country" type="radio" name="disaster_type" id="disater_type" value="country" checked>Country
-		<input type="radio" name="disaster_type"id="type_regional" value="regional">Regional</p> 
+  		<p><label>Active Disaster</label> <input type="checkbox" name="active" value="active" id="active"></p>
+  		<p><label>Disaster Type</label><input id="type_country" class="type" type="radio" name="type" value="country" >Country
+		<input type="radio" class="type" name="type"id="type_regional" value="regional">Regional</p>
 			
-		<select id="regional_disasters" name="regional_disaster" style="display: none;"> 
-		%for c in json: 
-			%if json[c]["cat"] == "regional":
-			<option value={{c}}>{{c}}</option>
-			%end
-		%end
-		</select>
+
 				
-	  	<select multiple="multiple" id="my-select" name="country" style="text-align:left">
+	  	<select id="country-select" name="country" >
+	  	%for x in check:
+		  <option value={{x}}>{{check[x][0].title()}}</option>
+	  	%end
+		  <option value="FLA">Florida</option>
+	  	</select>
+	  	<select id="regional-select" name="regional-countries" multiple="multiple" >
 	  	%for x in check:
 		  <option value={{x}}>{{check[x][0].title()}}</option>
 	  	%end
 	  	</select>
-          <p><label>Story URL</label> <input type="url" name="story_url" /></p>
-          <p><label>Video URL</label> <input type="url" name="video_url" /></p>
-		  <p><label>Video Title</label> <input type="text" name="video_title" /></p>
-          <p><label>Pop-up Summary</label> <textarea  rows="10" cols="50"  name="summary" /></textarea></p>
+		<select id="regional_disasters" name="regional_disaster" style="display: none;"> 
+		%for c in jsons: 
+			%if jsons[c]["cat"] == "regional":
+			<option value={{c}}>{{ jsons[c]["fullname"] }}</option>
+			%end
+		%end
+		</select>
+		  
+		  <p class="regional-context" ><label>Regional Disaster Name</label> <input type="text" name="regional_name" id="fullname" /></p>
+		  <p class="regional-context" ><label>Regional Disaster ID</label> <input type="text" name="regional_id" maxlength="4" /></p>
+
+          <p><label>Story URL</label> <input type="url"  class="context" name="Story"/></p><span class="context" id="Story"  style="display: none;"> </span> 
+          <p><label>Video URL</label> <input type="url"  class="context" name="Video" /></p> 
+		  <p><label>Video Title</label> <input type="text"  class="context" name="video_title" /></p><span class="context" id="Video"  style="display: none;"> </span> 
+          <p><label>Pop-up Summary</label> <textarea  rows="10" cols="50" class="context" name="tagline" id="tagline" /></textarea></p>
           <button type="submit" > OK </button>
       </form>
 	  <div id='scrape_status'><p>Ready.</p></div>
@@ -55,11 +66,11 @@
       <p><b>Delete Content From Map:</b></p>
       <form action="delete_content" id="delete_content" method="post">
 			<input type="text" id="hidden" name="hidden" style="display: none;"></div>
-			<div>{{json}} </div>
-         	%for c in json:
-	      	<p><b>{{check[c][0]}}</b></p>
-	 	    	%for x in json[c]["Story"]:
-	         	<p><input type="checkbox" id={{x}} name={{x}} class="check">  {{x}} </p>
+			<div>{{jsonJS}} </div>
+         	%for c in jsons:
+	      	<p><b>{{ jsons[c]["fullname"] }}</b></p>
+	 	    	%for x in jsons[c]["Story"]:
+	        	<p><input type="checkbox" id={{x}} name={{x}} class="check">  {{x}} </p>
 		    	%end
 		 	%end
 		 	<button type="submit"> OK </button>
@@ -76,18 +87,86 @@
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.1/jquery.min.js"></script>
 	<script src="assets/js/jquery.multi-select.js" type="text/javascript"></script>
     <script>
-        // Prevent form submission, send POST asynchronously and parse returned JSON
-		$("#my-select").multipleSelect({
-			selectAll: false,
-			placeholder: "Select Country or Countries",
-			});
 		
-		$("#type_regional").change(function() {
-			$("#regional_disasters").show();
-			
-			
-			
+
+		var jsonJS = {{!jsonJS}};
+		$("#regional_disasters").on('change', function(){
+			console.log($(this).children(":selected").text());	
+			if (this.value in jsonJS) {
+				if (jsonJS[this.value].active == "active") {
+					$("#active").prop('checked', true);
+				}
+				else { 
+					$("#active").prop('checked', false);
+				}
+				for (x in jsonJS[this.value]) {
+					console.log(x);
+					$("#" + x).text(JSON.stringify(jsonJS[this.value][x])).val(jsonJS[this.value][x]).show();  
+				}
+				console.log(jsonJS[this.value]["countries"]);
+				var countries = jsonJS[this.value]["countries"].split(",")
+				console.log(countries.toString());
+				countries = countries.map(function(d) {return d.replace(/#| /gi,'')});
+				
+				console.log(countries);
+				$("#regional-select").multipleSelect("setSelects",countries);		
+			}	
+		});	
+	
+		$("#country-select").multipleSelect({
+			placeholder: "Country Disaster",
+			single: true,
+			selectAll: false,
+			onClick: function(view){
+				if (view.value in jsonJS) {
+					if (jsonJS[view.value].active == "active") {
+						$("#active").prop('checked', true);
+					}
+					else { 
+						$("#active").prop('checked', false);
+					}
+					for (x in jsonJS[view.value]) {
+						$("#" + x).text(JSON.stringify(jsonJS[view.value][x])).val(jsonJS[this.value][x]).show();  
+					console.log(JSON.stringify(jsonJS[view.value][x]));
+					}
+				}
+			}
 		});
+		$("#regional-select").multipleSelect({
+			placeholder: "Regional Disaster",
+			selectAll: false
+		});
+		
+		$(".regional-context").hide();
+		$("#regional-select").multipleSelect('disable')
+		$("#country-select").multipleSelect('disable')
+		$("#regional-select").multipleSelect('uncheckAll')
+		$("#country-select").multipleSelect('uncheckAll')
+		
+	
+		$(".type").change(function() {
+			
+			$(".context").val("").text("");
+			$("#active").prop('checked', false); 
+			if ($(this).attr("id") == "type_regional") {
+				$("#regional_disasters").show();
+				$("#regional-select").multipleSelect('enable');
+				$("#country-select").multipleSelect('disable');
+				$(".regional-context").show();
+			
+			} else {
+				$("#regional_disasters").hide();
+				$(".regional-context").hide();
+				$("#regional-select").multipleSelect('disable');
+				$("#country-select").multipleSelect('enable');
+		
+
+			}		
+		});
+
+	         	
+
+			
 		$("form#delete_content").submit(function() {
 			$("div#delete_status").fadeIn(100);
             z = $(this);
@@ -105,7 +184,6 @@
                 $("div#delete_status").css("background-color", "#fff0f0");
                 $("div#delete_status p").text(j.msg);
               }
-       //       $("div#status").delay(800).fadeOut(500);
             }, "json");
             return false;
 				

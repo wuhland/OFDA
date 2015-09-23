@@ -40,7 +40,6 @@ session_opts = {
 }
 app = SessionMiddleware(app, session_opts)
 
-
 checkdict={}
 with open('ISO.csv') as f:
 	csv_file = csv.reader(f)
@@ -51,15 +50,17 @@ with open('ISO.csv') as f:
 		
 
 checklist = checklist[1:]
-
+floridas = ['florida','florida','florida','florida','florida','florida']
+floridas = [i.decode('UTF-8') for i in floridas]
+checklist.append(['FLA',floridas])
 
 #order dict
 
 for x in checklist:
 	checkdict[x[0]]=x[1]
+
 checkdict = OrderedDict(sorted(checkdict.items(), key=lambda t: t[1][0]))
-logging.warning('checkdict = '+ str(checkdict))
-		
+
 #############################
 # #  Bottle methods  # #
 
@@ -69,6 +70,11 @@ def postd():
 
 def post_get(name, default=''):
     return bottle.request.POST.get(name, default).strip()
+def post_getall(name):
+#	countries =  ['#' + s for s in bottle.request.POST.getall(name)]
+#	countries = ', '.join(countries)
+	return [s for s in bottle.request.POST.getall(name)]	
+#	return countries
 
 
 @bottle.post('/login')
@@ -226,11 +232,14 @@ def input():
 	control = []
 	with open('control.json','r') as j:
 		control = json.loads(j.read())
-		
+	controlJS = json.dumps(control, ensure_ascii=False, encoding='utf8')
+
+	
 	return dict(
 		current_user=aaa.current_user,
-		json=control,
-		check=checkdict
+		jsons=control,
+		check=checkdict,
+		jsonJS=controlJS
 	)
 		
 @bottle.post('/img_upload')
@@ -322,21 +331,23 @@ def scrape():
 		control = json.loads(j.read())
 	try:
 		isocode = post_get('country')
-		story_url = post_get('story_url')
-		video_url = post_get('video_url')
+		story_url = post_get('Story')
+		video_url = post_get('Video')
 		active = post_get('active')
-		dtype = post_get('disaster_type')
+		dtype = post_get('type')
 		video_title = post_get('video_title')
-		summary = post_get('summary')
-		logging.warning('summary = ' + summary + ' dtype = ' + dtype + ' active = ' + active + ' video_url = '+ video_url )
+		region_fullname = post_get('regional_name')
+		regional_countrylist = post_getall('regional-countries')
+		logging.warning('regional_countrylist = ' + str(regional_countrylist))
+		region_id = post_get('regional_id')
+		summary = post_get('tagline')
+		regional_countrystring = (', ').join(['#' + x.strip() for x in regional_countrylist])
+		logging.warning('summary = ' + summary + ' dtype = ' + dtype + ' isocode = ' + isocode + ' active = ' + active + ' video_url = '+ video_url + ' regional countries = ' + regional_countrystring )
 #		isocode = ""
 		message = ""
 #		for row in checklist:
 #			if country in row[1]:
 #				isocode = row[0]
-		if isocode == "": 
-			message = "The country you entered is not on our list try a different spelling"
-	
 		html_doc = urllib2.urlopen(str(story_url), timeout=90)
 		
 		message = 'Content scraped and added to map'
@@ -363,37 +374,42 @@ def scrape():
 		#writing json
 		
 #iterates through json to see if the country is use and if so if the same url has already been added. If country yes but url no add appropriate data to json. Need to write json file with html:<name of html file>
-		if control.get(isocode):
-			if active == "active":
-				control[isocode].update({"active":"active"})
-			else:
-				control[isocode].update({"active":"inactive"})
-			if summary != "":
-				control[isocode]["tagline"] = summary
-			
-			if control[isocode]["Video"].get(video_title):
-				message = "You already added this Video, please remove from admin page if you would like to reload the content for some reason"
-			else:
-				control[isocode]["Video"][video_title] = video_param
-			if control[isocode]["Story"].get(filenm):
-	
-				message = "You already added this url, please remove from admin page if you would like to reload the content for some reason"
-					
-			else:
-			#	control.update({isocode :{ filenm : {'date' : date }}}) 
-				control[isocode]["Story"][filenm] =  story_param
+
+
+		if active == "active":
+			isactive = "active"
 		else:
-			control.update({isocode:{"Story":{filenm:story_param},"Video":{video_title:video_param},"tagline":summary, "cat":dtype}})
-			if active == "active":
-				control[isocode].update({"active":"active"})
-			else:
-				control[isocode].update({"active":"inactive"})
+			isactive = "inactive"
+
+
+		if dtype == "country":
+			catID = []
+			for x in control:
+				if control[x]["cat"] == "regional":
+					countrylist = [z.replace("#","").strip() for z in control[x]["countries"].split(",")]
+					if isocode in countrylist:
+						if x in control[isocode]["catID"]:
+							continue
+						else: 
+							catID.append(x)
+						
+						
+			control.update({isocode:{"Story":{filenm:story_param},"Video":{video_title:video_param},"catID":catID,"tagline":summary, "cat":dtype,"fullname":checkdict[isocode][0], "active":isactive}})
+		elif dtype == "regional":
+			control.update({region_id:{"Story":{filenm:story_param},"Video":{video_title:video_param},"tagline":summary, "cat":dtype,"fullname":region_fullname,"countries":regional_countrystring, "active":isactive}})
+			
+			for d in regional_countrylist:
+				if d in control:
+					if region_id in control[d]["catID"]:
+						pass
+					else: 
+						control[d]["catID"].append(region_id)
+				else:
+					control.update({d:{"Story":{},"Video":{},"tagline":"", "cat":"country","fullname":checkdict[d][0],"catID":[region_id], "active":"inactive"}})
 	
 		with open('control.json','r+b') as j:
 			j.write(json.dumps(control, ensure_ascii=False).encode('utf8'))
 
-
-		
 
 		return dict(ok=True, msg='')
 	except Exception, e:

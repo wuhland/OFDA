@@ -178,7 +178,7 @@ function visualizeit() {
 		var dialogOptionBoolean = 0;
 
 		function zoom(xyz) {
-		dialogOptionBoolean = 0;
+			dialogOptionBoolean = 0;
 			g.transition()
 				.duration(750)
 				.attr("transform", "translate(" + projection.translate() + ")scale(" + xyz[2] + ")translate(-" + xyz[0] + ",-" + xyz[1] + ")")
@@ -242,19 +242,25 @@ function visualizeit() {
 				selectionName = selection;
 				headline = points2[selection].fullname;
 				tagline = points2[selection].tagline;
-			} else if (type === "country" || type === "both" || type === "invisible"  ) {
+			} else if (type === "country" || type === "invisible"   ) {
 				click = function(){country_clicked(selection);}; 
 				color = "#" + selection.id; 
 				selectionName = selection.id;
 				headline = featuredJSON[selection.id].fullname;
 				tagline = featuredJSON[selection.id].tagline;
+			} else if (type === "regional") {
+				click = function() {zoomRegion(featuredJSON[featuredJSON[selection.id].catID]);};
+				color = featuredJSON[featuredJSON[selection.id].catID].countries;
+				selectionName =  featuredJSON[selection.id].catID;
+				headline = featuredJSON[featuredJSON[selection.id].catID].fullname;
+				tagline = featuredJSON[featuredJSON[selection.id].catID].tagline;	
 			} else if (type === "florida") {
 				click = function(){		
 					var FLA = featuredJSON.FLA;
 					d3.selectAll(".popDetail, #tooltipImg, .popName, .another").remove();
 					tooltip.style("opacity",0).style("width","0px");	
-					zoom(FLA.xyz);
-					contentDialog(FLA.id);
+					zoom([133.81,293.13,3]);
+					contentDialog('FLA');
 					isGlobal(FLA.xyz, FLA.countries);
 					testDialog(dialogOptionBoolean,null);
 					}; 
@@ -262,20 +268,7 @@ function visualizeit() {
 					selectionName = "FLA";
 					headline = featuredJSON.FLA.fullname;
 					tagline = featuredJSON.FLA.tagline;
-			} else if (type === "regional") {
-				click = function() {zoomRegion(featuredJSON[featuredJSON[selection.id].catID]);};
-				color = featuredJSON[featuredJSON[selection.id].catID].countries;
-				selectionName =  featuredJSON[selection.id].catID;
-				headline = featuredJSON[featuredJSON[selection.id].catID].fullname;
-				tagline = featuredJSON[featuredJSON[selection.id].catID].tagline;	
-			 
-			} else if (type === "doubleRegional"   ) {
-				click = null; 
-				color = "#" + selection.id; 
-				selectionName = selection.id;
-				headline = featuredJSON[selection.id].fullname;
-				tagline = featuredJSON[selection.id].tagline;
-			} else if (type === "DC") {
+			}  else if (type === "DC") {
 				click = function(){		
 					var DC = featuredJSON.DC;
 					d3.selectAll(".popDetail, #tooltipImg, .popName, .another").remove();
@@ -493,9 +486,9 @@ function visualizeit() {
 								var type = featuredJSON[d.id].cat;
 								popup(centroid, selection, type); 
 								var c = "";		
-								if (featuredJSON[d.id].cat === "country" || featuredJSON[d.id].cat === "doubleRegional" || featuredJSON[d.id].cat === "both"){ 
+								if (featuredJSON[d.id]["catID"].length !== 1){ 
 									c =	d3.select("#" + d.id).transition().duration(500).style("fill", "#E89624");
-								} else if (featuredJSON[d.id].cat === "regional"){
+								} else {
 									c =	d3.selectAll(featuredJSON[featuredJSON[d.id].catID].countries)
 										.transition().duration(500).style("fill", "#E89624");
 								}
@@ -510,9 +503,9 @@ function visualizeit() {
 					.on("mouseout", function(d) {	
 						var	c = "";	
 						if (featuredMap.has(d.id)) {
-							if (featuredJSON[d.id].cat === "country" || featuredJSON[d.id].cat === "doubleRegional" || featuredJSON[d.id].cat === "both"){
+							if (featuredJSON[d.id]["catID"].length !== 1){ 
 								c =	d3.select(this).transition().duration(500).style("fill", "#FFCB36");
-							} else if (featuredJSON[d.id].cat === "regional"){
+							} else {
 								c =	d3.selectAll(featuredJSON[featuredJSON[d.id].catID].countries)
 									.transition().duration(500).style("fill", "#FFCB36");
 							}
@@ -545,13 +538,13 @@ function visualizeit() {
 				d3.select("#FLA").transition().duration(500).style("fill","#E89624");
 				})
 				.on("click", function() {
-				var FLA = featuredJSON.FLA;
-				d3.selectAll(".popDetail, #tooltipImg, .popName, .another").remove();
-				tooltip.style("opacity",0).style("width","0px");	
-				zoom(FLA.xyz);
-				contentDialog(FLA.id);
-				isGlobal(FLA.xyz, FLA.countries);
-				testDialog(dialogOptionBoolean,null);
+					var FLA = featuredJSON.FLA;
+					d3.selectAll(".popDetail, #tooltipImg, .popName, .another").remove();
+					tooltip.style("opacity",0).style("width","0px");	
+					zoom(FLA.xyz);
+					contentDialog(FLA.id);
+					isGlobal(FLA.xyz, FLA.countries);
+					testDialog(dialogOptionBoolean,null);
 					
 				})
 				.on("mouseout", function() {
@@ -645,17 +638,17 @@ function visualizeit() {
 		setTimeout(function() {
 
 			g.append("g").selectAll(".points")
-				.data(points)
+				.data(points2)
 				.enter()
 				.append("g")
 						.attr("transform", function(d) {
-							return "translate(" + projection(d[1]) + ")";
+							return "translate(" + projection(d.coord) + ")";
 						})
-						.attr("id", function (d) {return d[0];})
+						.attr("id", function (d) {return d;})
 						
 							.on("mouseover", function(d) {	
-								var centroid = projection(d[1]);
-								var selection = d[0];
+								var centroid = projection(d.coord);
+								var selection = d;
 								
 								var type = "";
 								if (this.id === "DC") {
@@ -666,7 +659,7 @@ function visualizeit() {
 								popup(centroid, selection, type); 
 							})
 							.attr("class",function(d) {
-								return points2[d[0]].type;
+								return d.type;
 							});
 
 
@@ -966,90 +959,7 @@ function visualizeit() {
 											text = "people displaced";
 										} else if (d[0] === "famine") {
 											text = "people at risk for famine";
-										} else if (d[0] === "humanitarian") {
-											text = "in need of humanitarian aid";
-										} else if (d[0] === "affected") {
-											text = "people affected";
-										} else if (d[0] === "killed") {
-											text = "people killed";
-										} else if (d[0] === "crops") {
-											text = "crops destroyed";
-										} else if (d[0] === "house") {
-											text = "houses damaged/destroyed";
-										} else if (d[0] === "provinces") {
-											text = "provinces hit";
-										} else if (d[0] === "homeless") {
-											text = "people left homeless";
-										} else if (d[0] === "damage") {
-											text = "in damages";
-										} else if (d[0] === "housedestroy") {
-											text = "houses destroyed";
-										} else if (d[0] === "homes") {
-											text = "homes damaged";
-										} else if (d[0] === "displacedKosovo") {
-											text = "people displaced in Kosovo";
-										} else if (d[0] === "buildingdestroy") {
-											text = "buildings destroyed";
-										} else if (d[0] === "injured") {
-											text = "people injured";
-										} else if (d[0] === "percentbuildings") {
-											text = "in Skopje destroyed";
-										} else if (d[0] === "2weeks") {
-											text = "within 2 weeks";
-										} else if (d[0] === "children") {
-											text = "children affected";
-										} else if (d[0] === "regions") {
-											text = "regions affected";
-										} else if (d[0] === "refugees") {
-											text = "refugees";
-										} else if (d[0] === "insecure") {
-											text = "people food insecure";
-										} else if (d[0] === "shelters") {
-											text = "temporary shelters built";
-										} else if (d[0] === "affected/yr") {
-											text = "people affected annually";
-										} else if (d[0] === "displacedconflict") {
-											text = "people displaced by conflict";
-										} else if (d[0] === "buildingsdestroyedSkopje") {
-											text = "of buildings <br> in Skopje destroyed";
-										} else if (d[0] === "missing") {
-											text = "people missing";
-										} else if (d[0] === "violence") {
-											text = "people fled violence";
-										} else if (d[0] === "camps") {
-											text = "people remain in camps";
-										} else if (d[0] === "worst") {
-											text = "years worst drought";
-										} else if (d[0] === "mal") {
-											text = "faced severe acute malnutrition in 2012";
-										} else if (d[0] === "countriesimpacted") {
-											text = "countries impacted";
-										} else if (d[0] === "economicdamages") {
-											text = "in economic damages";
-										} else if (d[0] === "healthcare") {
-											text = "patients received health care";
-										} else if (d[0] === "rate") {
-											text = "fatality rate";
-										} else if (d[0] === "countriesaffected") {
-											text = "countries affected";
-										} else if (d[0] === "surgeries") {
-											text = "surgeries performed";
-										} else if (d[0] === "facilities") {
-											text = "health facilities supported";
-										} else if (d[0] === "evacuated") {
-											text = "people evacuated";
-										} else if (d[0] === "saved") {
-											text = "people saved";
-										} else if (d[0] === "aid") {
-											text = "in aid";
-										} else if (d[0] === "countriesaffected") {
-											text = "countries affected";
-
-										} else if (d[0] === "responders") {
-											text = "U.S. responders at peak";
-
-										}
-									
+										} 									
 										return "<span class=nmTeal style=font-size:22pt>" + d[1] +  "</span>" + "&nbsp;<span class=nmTeal style=font-size:11pt;font-family:ssp_bold sans-serif>" + d[2] + "</span><br><span  style=font-size:11pt;font-weight:400;line-height:100%;color:#16B0C1;font-family:ssp_reg sans-serif>" +  text + "</span>";
 									});
 		}
@@ -1095,7 +1005,6 @@ function visualizeit() {
 			 if ( featuredJSON[d.id].type == "complex" || featuredJSON[d.id].type == "flood" || featuredJSON[d.id].type == "volcano" || featuredJSON[d.id].type == "famine" || featuredJSON[d.id].type == "DRR" ) {
 					contentDialog(d.id);
 					console.log(d.id);	
-			//		g.selectAll( "#" + d.id ).classed(".hide");
 					zoom2ADM(d,xyz);
 
 					ov(d.id);

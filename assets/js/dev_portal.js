@@ -36,7 +36,6 @@ function visualizeit() {
 				"fullname":"Washington, DC",
 				"type":"headquarters",
 				"coord":[-77.03666,90.89511],
-			//	"coord":[77.03666,138.89511],
 				"tagline":"Headquartered in D.C. and with more than 300 staff worldwide, USAID's Office of U.S. Foreign Disaster Assistance (OFDA) leads and coordinates the U.S. government's humanitarian assistance efforts overseas.  On average, OFDA responds to 70 disasters in more than 50 countries every year."
 			},
 			"Miami":{
@@ -224,10 +223,10 @@ function visualizeit() {
 		var zoomRegion = function(region) {	
 				d3.selectAll(".popDetail, #tooltipImg, .popName, .another").remove();
 				d3.select(".tooltip").style("opacity",0).style("width","0px");	
-				zoom(region.xyz);
-				contentDialog(region.id);
-				ov(region.id);
-				isGlobal(region.xyz, region.countries);
+				zoom(get_regionxyz(region));
+				contentDialog(region);
+				ov(region);
+				isGlobal(get_regionxyz(region), region.countries);
 		};
 
 		function popup (centroid, selection, type) {
@@ -253,9 +252,9 @@ function visualizeit() {
 					var FLA = featuredJSON.FLA;
 					d3.selectAll(".popDetail, #tooltipImg, .popName, .another").remove();
 					tooltip.style("opacity",0).style("width","0px");	
-					zoom(FLA.xyz);
+					zoom([133.81,293.13,3]);
 					contentDialog(FLA.id);
-					isGlobal(FLA.xyz, FLA.countries);
+					isGlobal([133.81,293.13,3], '#FLA');
 					testDialog(dialogOptionBoolean,null);
 					}; 
 					color = "#FLA";
@@ -964,91 +963,7 @@ function visualizeit() {
 										var text;
 										if (d[0] === "displaced") {
 											text = "people displaced";
-										} else if (d[0] === "famine") {
-											text = "people at risk for famine";
-										} else if (d[0] === "humanitarian") {
-											text = "in need of humanitarian aid";
-										} else if (d[0] === "affected") {
-											text = "people affected";
-										} else if (d[0] === "killed") {
-											text = "people killed";
-										} else if (d[0] === "crops") {
-											text = "crops destroyed";
-										} else if (d[0] === "house") {
-											text = "houses damaged/destroyed";
-										} else if (d[0] === "provinces") {
-											text = "provinces hit";
-										} else if (d[0] === "homeless") {
-											text = "people left homeless";
-										} else if (d[0] === "damage") {
-											text = "in damages";
-										} else if (d[0] === "housedestroy") {
-											text = "houses destroyed";
-										} else if (d[0] === "homes") {
-											text = "homes damaged";
-										} else if (d[0] === "displacedKosovo") {
-											text = "people displaced in Kosovo";
-										} else if (d[0] === "buildingdestroy") {
-											text = "buildings destroyed";
-										} else if (d[0] === "injured") {
-											text = "people injured";
-										} else if (d[0] === "percentbuildings") {
-											text = "in Skopje destroyed";
-										} else if (d[0] === "2weeks") {
-											text = "within 2 weeks";
-										} else if (d[0] === "children") {
-											text = "children affected";
-										} else if (d[0] === "regions") {
-											text = "regions affected";
-										} else if (d[0] === "refugees") {
-											text = "refugees";
-										} else if (d[0] === "insecure") {
-											text = "people food insecure";
-										} else if (d[0] === "shelters") {
-											text = "temporary shelters built";
-										} else if (d[0] === "affected/yr") {
-											text = "people affected annually";
-										} else if (d[0] === "displacedconflict") {
-											text = "people displaced by conflict";
-										} else if (d[0] === "buildingsdestroyedSkopje") {
-											text = "of buildings <br> in Skopje destroyed";
-										} else if (d[0] === "missing") {
-											text = "people missing";
-										} else if (d[0] === "violence") {
-											text = "people fled violence";
-										} else if (d[0] === "camps") {
-											text = "people remain in camps";
-										} else if (d[0] === "worst") {
-											text = "years worst drought";
-										} else if (d[0] === "mal") {
-											text = "faced severe acute malnutrition in 2012";
-										} else if (d[0] === "countriesimpacted") {
-											text = "countries impacted";
-										} else if (d[0] === "economicdamages") {
-											text = "in economic damages";
-										} else if (d[0] === "healthcare") {
-											text = "patients received health care";
-										} else if (d[0] === "rate") {
-											text = "fatality rate";
-										} else if (d[0] === "countriesaffected") {
-											text = "countries affected";
-										} else if (d[0] === "surgeries") {
-											text = "surgeries performed";
-										} else if (d[0] === "facilities") {
-											text = "health facilities supported";
-										} else if (d[0] === "evacuated") {
-											text = "people evacuated";
-										} else if (d[0] === "saved") {
-											text = "people saved";
-										} else if (d[0] === "aid") {
-											text = "in aid";
-										} else if (d[0] === "countriesaffected") {
-											text = "countries affected";
-
-										} else if (d[0] === "responders") {
-											text = "U.S. responders at peak";
-
-										}
+										} 
 									
 										return "<span class=nmTeal style=font-size:22pt>" + d[1] +  "</span>" + "&nbsp;<span class=nmTeal style=font-size:11pt;font-family:ssp_bold sans-serif>" + d[2] + "</span><br><span  style=font-size:11pt;font-weight:400;line-height:100%;color:#16B0C1;font-family:ssp_reg sans-serif>" +  text + "</span>";
 									});
@@ -1061,23 +976,29 @@ function visualizeit() {
 		function getMinOfArray(numArray) {
 			return Math.min.apply(null,numArray);
 		}
-			
+	
+
+		function get_regionxyz(region) {
+			var left = [], topp = [],right = [], bottom=[];
+			d3.selectAll(region.countries).each(function (d) {
+				var x = path.bounds(d);
+				left.push(x[0][0]);
+				right.push(x[1][0]);
+				topp.push(x[0][1]);
+				bottom.push(x[1][1]);
+			})
+			var bounds =  [[getMinOfArray(left),getMaxOfArray(topp)],[getMaxOfArray(right),getMinOfArray(bottom)]];
+			var w_scale = (bounds[1][0] - bounds[0][0]) / width;
+			var h_scale = (bounds[1][1] - bounds[0][1]) / height;
+			var z = 0.5 / Math.max(w_scale, h_scale);
+			var x = (bounds[1][0] + bounds[0][0]) / 2;
+			var y = (bounds[1][1] + bounds[0][1]) / 2 + (height / z / 50);
+			return [x, y, z];
+				
+		} 
+					
 		function get_xyz(d) {
-			var bounds;
-			if (featuredJSON[d.id]["catID"]) {
-				var left = [], topp = [],right = [], bottom=[];
-				d3.selectAll(featuredJSON[featuredJSON[d.id]["catID"]].countries).each(function (d) {
-					var x = path.bounds(d);
-					left.push(x[0][0]);
-					right.push(x[1][0]);
-					topp.push(x[0][1]);
-					bottom.push(x[1][1]);
-				})
-				bounds = [[getMinOfArray(left),getMaxOfArray(topp)],[getMaxOfArray(right),getMinOfArray(bottom)]];
-			} else {
- 
-				bounds = path.bounds(d);
-			}
+			bounds = path.bounds(d);
 			var w_scale = (bounds[1][0] - bounds[0][0]) / width;
 			var h_scale = (bounds[1][1] - bounds[0][1]) / height;
 			var z = 0.5 / Math.max(w_scale, h_scale);
