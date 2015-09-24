@@ -242,11 +242,23 @@ function visualizeit() {
 				headline = points2[selection].fullname;
 				tagline = points2[selection].tagline;
 			} else if (type === "country" || type === "both" || type === "invisible"  ) {
-				click = function(){country_clicked(selection);}; 
-				color = "#" + selection.id; 
-				selectionName = selection.id;
-				headline = featuredJSON[selection.id].fullname;
-				tagline = featuredJSON[selection.id].tagline;
+					var x = featuredJSON[selection.id];
+					if (x["catID"].length === 0) { 
+						click = function(){country_clicked(selection);}; 
+						color = "#" + selection.id; 
+						selectionName = selection.id;
+						console.log(selectionName);
+						headline = x.fullname;
+						tagline = x.tagline;
+					}
+					else if (x["catID"].length === 1 && x.tagline === "") {
+						click = function() {zoomRegion(featuredJSON[x.catID[0]]);};
+						color = featuredJSON[x.catID[0]].countries;
+						selectionName =  x.catID[0];
+						headline = featuredJSON[x.catID[0]].fullname;
+						tagline = featuredJSON[x.catID[0]].tagline;	
+					}
+			
 			} else if (type === "florida") {
 				click = function(){		
 					var FLA = featuredJSON.FLA;
@@ -256,24 +268,11 @@ function visualizeit() {
 					contentDialog(FLA.id);
 					isGlobal([133.81,293.13,3], '#FLA');
 					testDialog(dialogOptionBoolean,null);
-					}; 
-					color = "#FLA";
-					selectionName = "FLA";
-					headline = featuredJSON.FLA.fullname;
-					tagline = featuredJSON.FLA.tagline;
-			} else if (type === "regional") {
-				click = function() {zoomRegion(featuredJSON[featuredJSON[selection.id].catID]);};
-				color = featuredJSON[featuredJSON[selection.id].catID].countries;
-				selectionName =  featuredJSON[selection.id].catID;
-				headline = featuredJSON[featuredJSON[selection.id].catID].fullname;
-				tagline = featuredJSON[featuredJSON[selection.id].catID].tagline;	
-			 
-			} else if (type === "doubleRegional"   ) {
-				click = null; 
-				color = "#" + selection.id; 
-				selectionName = selection.id;
-				headline = featuredJSON[selection.id].fullname;
-				tagline = featuredJSON[selection.id].tagline;
+				}; 
+				color = "#FLA";
+				selectionName = "FLA";
+				headline = featuredJSON.FLA.fullname;
+				tagline = featuredJSON.FLA.tagline;
 			} else if (type === "DC") {
 				click = function(){		
 					var DC = featuredJSON.DC;
@@ -284,7 +283,7 @@ function visualizeit() {
 					contentDialog("DC");
 					isGlobal(DC.xyz, "#DC_path");
 					testDialog(dialogOptionBoolean,null);
-					}; 
+				}; 
 				color = "#NA";
 				selectionName = selection;
 				headline = points2[selection].fullname;
@@ -325,7 +324,7 @@ function visualizeit() {
 					.style("display", "block");	
 					
 				tooltip.selectAll("div, img, .arrow, .another").remove();
-			
+					
 				tooltip.insert("div")
 					.attr("id","base")
 					.append('span')
@@ -340,6 +339,7 @@ function visualizeit() {
 					.style("opacity", "1"); 
 
 				var image = new Image();
+
 
 				tooltip.insert("div")
 					.html(function(){return tagline;}) 
@@ -366,6 +366,30 @@ function visualizeit() {
 						.style("position","absolute")
 						.attr("id","arrow")
 						.on("click", click);	
+				
+			for (var i=0;  featuredJSON[selection.id]["catID"].length; i++) {
+				var region = featuredJSON[selection.id].catID[i] 
+				tooltip.append("div")
+					.style({"width":"100%","display":"inline-block","left":"0px","background-color":"#16B0C1","z-index":6,"position":"absolute"})
+					.attr("class","another")
+					.style("padding","8px")
+					.style("width","200px")
+					.on("mouseover", function() {
+						dialogOptionBoolean += 1;
+						d3.selectAll(region.countries).transition().duration(500).style("fill","#E89624");
+					}) 
+					.on("mouseout", function() {
+						dialogOptionBoolean -= 1;
+						d3.selectAll(region.countries).transition().duration(70).style("fill","#FFCB36");
+						setTimeout(function(){testDialog(dialogOptionBoolean,null);},10);
+					})
+					.on("click", function() {
+						 zoomRegion(region);
+					})
+					.html("<span class=popDetail>" + featuredJSON[region].tagline + "</span>")
+
+				
+				}
 
 		if (type === "both") {
 			tooltip.style({"border-bottom-left-radius":"0em","border-bottom-right-radius":"0em"}).append("div")
@@ -438,7 +462,7 @@ function visualizeit() {
 
 			}
 
-		}
+	}	
 
 		d3.json("assets/data/countries_min.json", function(error, us) {	
 				g.append("g")
