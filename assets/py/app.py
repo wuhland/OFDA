@@ -389,10 +389,9 @@ def scrape():
 					countrylist = [z.replace("#","").strip() for z in control[x]["countries"].split(",")]
 					if isocode in countrylist:
 						if x in control[isocode]["catID"]:
-							continue
+							pass
 						else: 
 							catID.append(x)
-						
 						
 			control.update({isocode:{"Story":{filenm:story_param},"Video":{video_title:video_param},"catID":catID,"tagline":summary, "cat":dtype,"fullname":checkdict[isocode][0], "active":isactive}})
 		elif dtype == "regional":
@@ -407,7 +406,7 @@ def scrape():
 				else:
 					control.update({d:{"Story":{},"Video":{},"tagline":"", "cat":"country","fullname":checkdict[d][0],"catID":[region_id], "active":"inactive"}})
 	
-		with open('control.json','r+b') as j:
+		with open('control.json','w') as j:
 			j.write(json.dumps(control, ensure_ascii=False).encode('utf8'))
 
 

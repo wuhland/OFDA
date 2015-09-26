@@ -5,7 +5,7 @@ d3.json("/control.json", function(error, json) {
 	featuredJSON = json;
 	visualizeit();
 });
-
+var dialogOptionBoolean = 0;
 function visualizeit() {
 
 		var width = 960,
@@ -16,6 +16,7 @@ function visualizeit() {
 
 		tooltip = d3.select("body").append("div")
 			.attr("class", "tooltip");
+
 
 
 		var  points = [
@@ -99,7 +100,6 @@ function visualizeit() {
 		//var featured = ["PHL","JAM","SDS","HTI"];
 		//var featuredMap = d3.set(featured);
 		var featuredMap = d3.map(featuredJSON);
-		console.log(featuredMap);
 		function httpGet(theURL){
 			var xmlHttp = null;
 				
@@ -159,17 +159,12 @@ function visualizeit() {
 		var g = svg.append("g");
 
 		function testDialog (dialogOptionBoolean, Media) {
-
 			if (dialogOptionBoolean === 0) {
 				d3.select("#" + Media).style("background-color","#16B0C1").style("color","white");	
 				d3.selectAll(".dialogBoxOptionContainer").remove();
 				tooltip.transition().duration(700).style("opacity", 0);
 				tooltip.transition().delay(705).each('start', function(){
-					d3.selectAll(".popDetail, #tooltipImg").remove();
-					d3.selectAll(".popName").remove();
-					d3.selectAll("#arrow").remove();
-					d3.selectAll(".another").remove();
-					d3.selectAll(".popFront").remove();
+					d3.selectAll(".anotherPop, .region-title, #arrow, .popDetail, #tooltipImg, .popName, .popFront").remove();
 				}).style("width","0px").style("height","0px").style("pointer-events","none"); 
 			}
 		}
@@ -221,7 +216,7 @@ function visualizeit() {
 		globe.src = 'assets/img/globe.png';
 
 		var zoomRegion = function(region) {	
-				d3.selectAll(".popDetail, #tooltipImg, .popName, .another").remove();
+				d3.selectAll(".popDetail, #tooltipImg, .popName, .anotherPop, .region-title").remove();
 				d3.select(".tooltip").style("opacity",0).style("width","0px");	
 				zoom(get_regionxyz(region));
 				contentDialog(region);
@@ -230,6 +225,8 @@ function visualizeit() {
 		};
 
 		function popup (centroid, selection, type) {
+			d3.selectAll(".popDetail, #tooltipImg, .popName, .anotherPop, .region-title").remove();
+			d3.selectAll(".region-title").remove;
 		  var headline = "";
 		  var tagline = "";
 			var selectionName = "";
@@ -241,42 +238,46 @@ function visualizeit() {
 				selectionName = selection;
 				headline = points2[selection].fullname;
 				tagline = points2[selection].tagline;
-			} else if (type === "country" || type === "both" || type === "invisible"  ) {
+			} else if (type === "country" || type === "invisible"  ) {
 					var x = featuredJSON[selection.id];
-					if (x["catID"].length === 0) { 
-						click = function(){country_clicked(selection);}; 
-						color = "#" + selection.id; 
-						selectionName = selection.id;
-						console.log(selectionName);
-						headline = x.fullname;
-						tagline = x.tagline;
+					if (selection === "FLA") {
+						click = function(){		
+							var FLA = featuredJSON.FLA;
+							d3.selectAll(".popDetail, #tooltipImg, .popName, .anotherPop, .region-title").remove();
+							tooltip.style("opacity",0).style("width","0px");	
+							zoom([133.81,293.13,3]);
+							contentDialog(FLA);
+							isGlobal([133.81,293.13,3], '#FLA');
+							testDialog(dialogOptionBoolean,null);
+						}; 
+					color = "#FLA";
+					selectionName = "FLA";
+					headline = featuredJSON.FLA.fullname;
+					tagline = featuredJSON.FLA.tagline;
+
 					}
 					else if (x["catID"].length === 1 && x.tagline === "") {
+						console.log("hello thats whats up")
 						click = function() {zoomRegion(featuredJSON[x.catID[0]]);};
 						color = featuredJSON[x.catID[0]].countries;
 						selectionName =  x.catID[0];
 						headline = featuredJSON[x.catID[0]].fullname;
-						tagline = featuredJSON[x.catID[0]].tagline;	
+						tagline ="" 
 					}
+					else { 
+						click = function(){country_clicked(selection);}; 
+						color = "#" + selection.id; 
+						selectionName = selection.id;
+						headline = x.fullname;
+						tagline = x.tagline;
+					}
+					
+					console.log("headline  = " + headline)
 			
-			} else if (type === "florida") {
-				click = function(){		
-					var FLA = featuredJSON.FLA;
-					d3.selectAll(".popDetail, #tooltipImg, .popName, .another").remove();
-					tooltip.style("opacity",0).style("width","0px");	
-					zoom([133.81,293.13,3]);
-					contentDialog(FLA.id);
-					isGlobal([133.81,293.13,3], '#FLA');
-					testDialog(dialogOptionBoolean,null);
-				}; 
-				color = "#FLA";
-				selectionName = "FLA";
-				headline = featuredJSON.FLA.fullname;
-				tagline = featuredJSON.FLA.tagline;
-			} else if (type === "DC") {
+			}else if (type === "DC") {
 				click = function(){		
 					var DC = featuredJSON.DC;
-					d3.selectAll(".popDetail, #tooltipImg, .popName, .another").remove();
+					d3.selectAll(".popDetail, #tooltipImg, .popName, .anotherPop, .region-title").remove();
 					tooltip.style("opacity",0).style("width","0px");
 						
 					zoom(DC.xyz);
@@ -307,13 +308,10 @@ function visualizeit() {
 				arrow = {"height":0,"width":0,"border":"20px solid hsla(0,0%,0%,0)","border-bottom":"20px solid #16B0C1","top":"-20px","left":"40%","border-top":"0px solid hsla(0,0%,0%,0)","pointer-events":"none"};
 				offsets = [97,33];
 			}
-			 
 				tooltip
 					.style("pointer-events","auto")
 					.attr("class","tooltip pop")
 					.style("width", "200px")
-					.style("border-bottom-left-radius",".4em")
-					.style("border-bottom-right-radius",".4em")
 					.style("opacity", 0)
 					.style("top", (centroid[1] + offsets[1] ) + "px")
 					.style("left", (centroid[0] - offsets[0]) + "px")
@@ -323,34 +321,33 @@ function visualizeit() {
 					.style("visibility","visible")
 					.style("display", "block");	
 					
-				tooltip.selectAll("div, img, .arrow, .another").remove();
+				tooltip.selectAll("div, img, .anotherPop, .region-title").remove();
 					
-				tooltip.insert("div")
-					.attr("id","base")
-					.append('span')
+				tooltip.append("div").attr("class","scroll");
+				tooltip.select(".scroll").append("div")
+					.append('p')
 					.text(function(){
 						return headline;
 					})				
 					.attr("class", "popName");
 
-				tooltip.append("img")
+				tooltip.select(".scroll").append("img")
 					.attr("id", "tooltipImg")
 					.attr("width", 200)
 					.style("opacity", "1"); 
 
 				var image = new Image();
 
-
-				tooltip.insert("div")
+				tooltip.select(".scroll").append("p")
 					.html(function(){return tagline;}) 
 					.attr("class", "popDetail");
 
-				tooltip.append("div")
+				tooltip.select(".scroll").append("div")
 					.attr("class","popFront")
 					.on("mouseover", function() {
-						dialogOptionBoolean = 0;
+						dialogOptionBoolean = 0;	
 						dialogOptionBoolean += 1;
-
+						console.log("tooltip mouseover boolean = " + dialogOptionBoolean);
 						d3.selectAll(color).transition().duration(500).style("fill","#E89624");
 					})	
 					.on("mouseout", function() {
@@ -361,83 +358,48 @@ function visualizeit() {
 					})
 						.on("click", click);
 						
-					tooltip.append("div")
+					tooltip.select(".scroll").select(".popFront").insert("div",":first-child")
 						.style(arrow)
 						.style("position","absolute")
 						.attr("id","arrow")
-						.on("click", click);	
-				
-			for (var i=0;  featuredJSON[selection.id]["catID"].length; i++) {
-				var region = featuredJSON[selection.id].catID[i] 
-				tooltip.append("div")
-					.style({"width":"100%","display":"inline-block","left":"0px","background-color":"#16B0C1","z-index":6,"position":"absolute"})
-					.attr("class","another")
-					.style("padding","8px")
-					.style("width","200px")
+						.on("click", click);
+		   var regionalNum;
+			if (selection === "FLA") {
+				regionalNum = 0;	
+			} else {
+				regionalNum = featuredJSON[selection.id]["catID"].length;
+			}
+			for (var i=0; i < regionalNum ; i++) {
+				var region = featuredJSON[selection.id]["catID"][i]
+				color = featuredJSON[region]["countries"]
+				tooltip.select(".scroll").append("div")
+					.attr("class",".anotherPop")
 					.on("mouseover", function() {
 						dialogOptionBoolean += 1;
-						d3.selectAll(region.countries).transition().duration(500).style("fill","#E89624");
+						d3.selectAll(color).transition().duration(500).style("fill","#E89624");
+						
 					}) 
 					.on("mouseout", function() {
 						dialogOptionBoolean -= 1;
-						d3.selectAll(region.countries).transition().duration(70).style("fill","#FFCB36");
+						d3.selectAll(color).transition().duration(70).style("fill","#FFCB36");
 						setTimeout(function(){testDialog(dialogOptionBoolean,null);},10);
+						
 					})
 					.on("click", function() {
 						 zoomRegion(region);
 					})
-					.html("<span class=popDetail>" + featuredJSON[region].tagline + "</span>")
+					.append("div")
+					.attr("class","region-title")
+					.html( featuredJSON[region].fullname + "<br/>")
+					.append("div")
+					.attr("class","popDetail")
+					.text(function(){return featuredJSON[region].tagline});
 
 				
 				}
+				debugger;
 
-		if (type === "both") {
-			tooltip.style({"border-bottom-left-radius":"0em","border-bottom-right-radius":"0em"}).append("div")
-				.style({"width":"100%","display":"inline-block","left":"0px","background-color":"#16B0C1","z-index":6,"position":"absolute","border-bottom-left-radius":".4em","border-bottom-right-radius":".4em","border-top":"medium solid white","top":"100%"})
-				.attr("class","another")
-				.style("padding","8px")
-				.style("width","200px")
-				.html("<span class=popDetail style=line-height:100%>" + featuredJSON[selection.id].fullname + " " + featuredJSON[featuredJSON[selection.id].catID].bothTagline + "</span>")
-				.on("mouseover", function() {
-					dialogOptionBoolean += 1;
-					d3.selectAll(featuredJSON[featuredJSON[selection.id].catID].countries).transition().duration(500).style("fill","#E89624");
-				}) 
-				.on("mouseout", function() {
-					dialogOptionBoolean -= 1;
-					d3.selectAll(featuredJSON[featuredJSON[selection.id].catID].countries).transition().duration(500).style("fill","#FFCB36");
-					setTimeout(function(){testDialog(dialogOptionBoolean,null);},10);
-				})
-				.on("click", function() {
-					zoomRegion( featuredJSON[featuredJSON[selection.id].catID]);
-				});	
-
-
-		} else if (type === "doubleRegional"){
-			tooltip.append("div")
-				.style({"width":"100%","display":"inline-block","left":"0px","background-color":"#16B0C1","z-index":6,"position":"absolute"})
-				.attr("class","another")
-				.style("padding","8px")
-				.style("width","200px")
-				.on("mouseover", function() {
-					dialogOptionBoolean += 1;
-					d3.selectAll(featuredJSON[featuredJSON[selection.id].catID[1]].countries).transition().duration(500).style("fill","#E89624");
-				}) 
-				.on("mouseout", function() {
-					dialogOptionBoolean -= 1;
-					d3.selectAll(featuredJSON[featuredJSON[selection.id].catID[1]].countries).transition().duration(70).style("fill","#FFCB36");
-					setTimeout(function(){testDialog(dialogOptionBoolean,null);},10);
-				})
-				.on("click", function() {
-					 zoomRegion(featuredJSON[featuredJSON[selection.id].catID[1]]);
-				})
-				.html("<span class=popDetail>In 2011, ongoing conflict and the worst drought in 60 years affected 13 million people in the Horn of Africa, more than the populations of NYC and LA combined. This led the U.N. to declare a <span style=color:#FFCB36;font-weight:bold>famine</span> in Somalia and prompted a vast humanitarian response to the region.</span>")
-				.append("div")
-					.style({"width":"100%","top":"100%","display":"inline-block","left":"0px","background-color":"#16B0C1","z-index":6,"position":"absolute","border-bottom-left-radius":".4em","border-bottom-right-radius":".4em","border-top":"medium solid white"})
-					.attr("class","another")
-					.style("padding","8px")
-					.style("width","200px")
-					.html("<span class=popDetail>Somalia was also impacted by the <span style=color:#FFCB36;font-weight:bold>deadliest tsunami</span> in recorded history, which hit the region in December 2004.</span>")
-					.on("mouseover", function() {
+/*					.on("mouseover", function() {
 						dialogOptionBoolean += 1;
 						d3.selectAll(featuredJSON[featuredJSON[selection.id].catID[0]].countries).transition().duration(500).style("fill","#E89624");
 					})
@@ -461,7 +423,7 @@ function visualizeit() {
 
 
 			}
-
+*/
 	}	
 
 		d3.json("assets/data/countries_min.json", function(error, us) {	
@@ -508,7 +470,6 @@ function visualizeit() {
 						return c;
 						} )
 					.on("mouseover", function(d) {
-								
 						if (featuredMap.has(d.id)) {
 								
 								var centroid = path.centroid(d);
@@ -562,14 +523,14 @@ function visualizeit() {
 				.attr("id","FLA")
 				.on("mouseover", function(d) {
 					var centroid = path.centroid(d);
-					var selection = d;
-					var type = "florida";
+					var selection = "FLA";
+					var type = "country";
 					popup (centroid, selection, type);
-				d3.select("#FLA").transition().duration(500).style("fill","#E89624");
+	//			d3.select("#FLA").transition().duration(500).style("fill","#E89624");
 				})
 				.on("click", function() {
 				var FLA = featuredJSON.FLA;
-				d3.selectAll(".popDetail, #tooltipImg, .popName, .another").remove();
+				d3.selectAll(".popDetail, #tooltipImg, .popName, .anotherPop, .region-title").remove();
 				tooltip.style("opacity",0).style("width","0px");	
 				zoom(FLA.xyz);
 				contentDialog(FLA.id);
@@ -631,23 +592,24 @@ function visualizeit() {
 						.style("fill-opacity","0")
 						.on("mouseout", function (d) {
 								var c = "";		
-								if (featuredJSON[d.id].cat === "country" || featuredJSON[d.id].cat === "doubleRegional" || featuredJSON[d.id].cat === "both"){ 
-									c =	d3.select("#" + d.id).transition().duration(500).style("fill", "#FFCB36");
-								} else if (featuredJSON[d.id].cat === "regional"){
-									c =	d3.selectAll(featuredJSON[featuredJSON[d.id].catID].countries)
+								if (featuredJSON[d.id]["catID"].length === 1 && featuredJSON[d.id].tagline === ""){ 															c =	d3.selectAll(featuredJSON[featuredJSON[d.id]["catID"][0]].countries)
 										.transition().duration(500).style("fill", "#FFCB36");
+								} else {
+
+									c =	d3.select("#" + d.id).transition().duration(500).style("fill", "#FFCB36");
 								}
 								return c;
 						
 						})	
 						.on("mouseover", function (d) {					
-								var c = "";		
-								if (featuredJSON[d.id].cat === "country" || featuredJSON[d.id].cat === "doubleRegional" || featuredJSON[d.id].cat === "both"){ 
-									c =	d3.select("#" + d.id).transition().duration(500).style("fill", "#E89624");
-								} else if (featuredJSON[d.id].cat === "regional"){
-									c =	d3.selectAll(featuredJSON[featuredJSON[d.id].catID].countries)
+								var c = "";	
+								if (featuredJSON[d.id]["catID"].length === 1 && featuredJSON[d.id].tagline === ""){ 															c =	d3.selectAll(featuredJSON[featuredJSON[d.id]["catID"][0]].countries)
 										.transition().duration(500).style("fill", "#E89624");
-								}
+								} else {
+
+									c =	d3.select("#" + d.id).transition().duration(500).style("fill", "#E89624");
+								}	
+
 							var centroid = path.centroid(d);
 							var selection = d;
 							var type = featuredJSON[selection.id].cat;
@@ -658,11 +620,12 @@ function visualizeit() {
 						})
 						.on("click", function(d) {
 							var c = "";
-							if (featuredJSON[d.id].cat === "regional") {
-								c = zoomRegion(featuredJSON[featuredJSON[d.id].catID]);
+							if (featuredJSON[d.id]["catID"].length === 1 && featuredJSON[d.id].tagline === "") {
+								c = zoomRegion(featuredJSON[featuredJSON[d.id].catID][0]);
 							}
-							else c = country_clicked(d);
-							return c;		
+							else if ( featuredJSON[d.id]["catID"].length === 0) {
+								 c = country_clicked(d);
+							}
 						});
 
 		setTimeout(function() {
@@ -728,8 +691,6 @@ function visualizeit() {
 
 			if (xyz[2] === 1) {
 				
-				d3.selectAll("#hurr, #icon, .dot, .ring").remove();
-				d3.select("#icon").remove();
 				d3.selectAll(".circle").style("pointer-events","auto"); 
 				d3.select("#FLA").style("pointer-events","auto").transition().duration(500).style("fill","#FFCB36");
 				d3.selectAll("#ovContainer, #dataTitle").remove();
@@ -740,9 +701,6 @@ function visualizeit() {
 				clearTimeout(timerID);
 				d3.selectAll("#hurr, .icon").remove(); 
 				d3.select("#globeContainer").style("pointer-events","none").style("visibility","hidden");
-
-				d3.selectAll(".earthquake").remove();	
-
 				d3.selectAll(".featured").style("cursor","pointer")
 					.style("pointer-events","auto")
 					.transition().duration(500)
@@ -760,7 +718,7 @@ function visualizeit() {
 				.transition().duration(500)
 				.style("opacity",0);
 
-			d3.selectAll(".popDetail, .popFront, #arrow, .another").remove();	
+			d3.selectAll(".popDetail, .popFront, #arrow, .anotherPop, .region-title").remove();	
 				
 			d3.select("#globeContainer").style("visibility","visible").style("pointer-events","auto");
 				
@@ -795,8 +753,6 @@ function visualizeit() {
 						var text;
 						if (Media ===  "Video") {
 							text =  "<iframe width=\"" + width + "\" height=\"" + height + "\" src=\"//" + ThingByName[Name].URL + "\" frameborder=\"0\" allowfullscreen></iframe>";
-						console.log(ThingByName);
-						console.log(ThingByName[Name]);
 						} else if (Media === "Story") {
 							
 							text = "<iframe name='iframe1' id='iframe1' src=\"../../_posts" + Country.toLowerCase() + "/" + ThingByName[Name].Name + ".html\" seamless></iframe>";
@@ -961,7 +917,6 @@ function visualizeit() {
 						.text(function () {  return featuredJSON[feature].fullname; } )
 						.append("span")
 							.style("display","inline-block")
-					//		.attr("class","nmTeal")
 							.style("font-family","ssp_reg, sans-serif")
 							.style("color","#16B0C1")
 							.style("margin-left","5pt")
@@ -1056,17 +1011,7 @@ function visualizeit() {
 
 
 
-			 if ( featuredJSON[d.id].type == "complex" || featuredJSON[d.id].type == "flood" || featuredJSON[d.id].type == "volcano" || featuredJSON[d.id].type == "famine" || featuredJSON[d.id].type == "DRR" ) {
-					contentDialog(d.id);
-					console.log(d.id);	
-			//		g.selectAll( "#" + d.id ).classed(".hide");
-					zoom2ADM(d,xyz);
-
-					ov(d.id);
-							
-				}		
-
-				else {		
+		
 				
 				var zoomFactor = [1,1,0.5];
 				for(var i=0; i < zoomFactor.length; i++) {
@@ -1077,7 +1022,6 @@ function visualizeit() {
 			//		g.selectAll( "#" + d.id ).classed(".hide");
 					zoom2ADM(d,xyz);
 					return;
-				}
 			} else {
 				d3.select("#ovContainer").remove();
 				d3.select("#dataTitle").remove();
@@ -1088,7 +1032,7 @@ function visualizeit() {
 				d3.select("#dialogBoxContainer").remove();
 				zoom(xyz);
 				isGlobal(xyz, null); 
-				d3.selectAll(".dialogBox").remove();
+							d3.selectAll(".dialogBox").remove();
 				
 			}
 
