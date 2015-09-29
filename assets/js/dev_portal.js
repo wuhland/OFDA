@@ -8,14 +8,15 @@ d3.json("/control.json", function(error, json) {
 var dialogOptionBoolean = 0;
 function visualizeit() {
 
+		d3.select("body").append("div").attr("class","scroll");
 		var width = 960,
 			height = 750,
 			country,
 			state;
 		var topMargin = 0, 
 
-		tooltip = d3.select("body").append("div")
-			.attr("class", "tooltip");
+			tooltip = d3.select(".scroll").append("div")
+				.attr("class", "tooltip");
 
 
 
@@ -36,7 +37,7 @@ function visualizeit() {
 			"DC":{
 				"fullname":"Washington, DC",
 				"type":"headquarters",
-				"coord":[-77.03666,90.89511],
+				"coord":[-77.03666,38.89511],
 				"tagline":"Headquartered in D.C. and with more than 300 staff worldwide, USAID's Office of U.S. Foreign Disaster Assistance (OFDA) leads and coordinates the U.S. government's humanitarian assistance efforts overseas.  On average, OFDA responds to 70 disasters in more than 50 countries every year."
 			},
 			"Miami":{
@@ -60,7 +61,7 @@ function visualizeit() {
 			"SanJose":{
 				"fullname":"San Jose, Costa Rica",
 				"type":"office",
-				"coord":[-84.0833,9.93333],
+				"coord":[-84.0833,9],
 				"tagline":"San Jose, Costa Rica is the location of 1 of OFDA's 6 regional offices where staff oversee humanitarian programs in Latin America and the Caribbean." 
 			},	
 			"Budapest":{
@@ -323,26 +324,25 @@ function visualizeit() {
 					
 				tooltip.selectAll("div, img, .anotherPop, .region-title").remove();
 					
-				tooltip.append("div").attr("class","scroll");
-				tooltip.select(".scroll").append("div")
+				tooltip.append("div")
 					.append('p')
 					.text(function(){
 						return headline;
 					})				
 					.attr("class", "popName");
 
-				tooltip.select(".scroll").append("img")
+				tooltip.append("img")
 					.attr("id", "tooltipImg")
 					.attr("width", 200)
 					.style("opacity", "1"); 
 
 				var image = new Image();
 
-				tooltip.select(".scroll").append("p")
+				tooltip.append("p")
 					.html(function(){return tagline;}) 
 					.attr("class", "popDetail");
 
-				tooltip.select(".scroll").append("div")
+				tooltip.append("div")
 					.attr("class","popFront")
 					.on("mouseover", function() {
 						dialogOptionBoolean = 0;	
@@ -358,7 +358,7 @@ function visualizeit() {
 					})
 						.on("click", click);
 						
-					tooltip.select(".scroll").select(".popFront").insert("div",":first-child")
+					tooltip.select(".popFront").insert("div",":first-child")
 						.style(arrow)
 						.style("position","absolute")
 						.attr("id","arrow")
@@ -397,7 +397,6 @@ function visualizeit() {
 
 				
 				}
-				debugger;
 
 /*					.on("mouseover", function() {
 						dialogOptionBoolean += 1;
@@ -635,7 +634,8 @@ function visualizeit() {
 				.enter()
 				.append("g")
 						.attr("transform", function(d) {
-							return "translate(" + projection(d[1]) + ")";
+							
+							return "translate(" + projection( d[1] ) + ")";
 						})
 						.attr("id", function (d) {return d[0];})
 						
@@ -739,9 +739,9 @@ function visualizeit() {
 		//get content from server
 		function getHTTP(Media, Country, Name) {
 			var Thing = featuredJSON[Country][Media];
-			var ThingByName = {};
-			var NameFunct = function(d) {return d.Button;};
-			Thing.forEach(function(d){ThingByName[NameFunct(d)] = d;});
+		//	var ThingByName = {};
+		//	var NameFunct = function(d) {return d.button;};
+		//	Thing.forEach(function(d){ThingByName[NameFunct(d)] = d;});
 			d3.select("#map").append("div")
 				.attr("id","swipeBack")
 				.append("div")
@@ -752,10 +752,11 @@ function visualizeit() {
 					.html(function () {
 						var text;
 						if (Media ===  "Video") {
-							text =  "<iframe width=\"" + width + "\" height=\"" + height + "\" src=\"//" + ThingByName[Name].URL + "\" frameborder=\"0\" allowfullscreen></iframe>";
+							text =  "<iframe width=\"" + width + "\" height=\"" + height + "\" src=\"" + featuredJSON[Country][Media][Name].url + "\" frameborder=\"0\" allowfullscreen></iframe>";
 						} else if (Media === "Story") {
-							
-							text = "<iframe name='iframe1' id='iframe1' src=\"../../_posts" + Country.toLowerCase() + "/" + ThingByName[Name].Name + ".html\" seamless></iframe>";
+								console.log(Country);	
+								console.log(featuredJSON[Country]);	
+							text = "<iframe name='iframe1' id='iframe1' src=\"assets/data/mapfiles/" + Country + "/" + Name + ".html\" seamless></iframe>";
 						} else if (Media === "Infographic") {
 							text = "<img width=\"" + width + "\" height=\"" + (height - 50) + "\"src=\"data/countries/" + Country.toLowerCase() + "/graphic.jpg\"><div style=\"width:100%;position:absolute;background-color:#2b2b2b;opacity:0.5;bottom:0px;\"><span class=\"font\" style=\"color:white;margin-left:5px;\" >PDF version<a style=\"color:#16B0C1;margin:5px;\" target=\"_blank\" href=" + featuredJSON[Country].Infographic[0].Hyperlink + ">here</a></span></div>";
 						} else if (Media === "Gallery") {
@@ -778,11 +779,15 @@ function visualizeit() {
 		}
 
 		function contentDialog(Country) {
+			console.log("contentDialog");
 			function Accepted(value) {
+				console.log("Accepted");
+				console.log(value);
 				var accepted = ["Story","Video","Infographic","Gallery"];
 				var medias = [];
 				for (obj in value) {
-					if(accepted.indexOf(obj) > -1 && value[obj].length > 0) {
+					console.log(obj);
+					if(accepted.indexOf(obj) > -1 && Object.keys(obj).length > 0) {
 						medias.push(obj);
 					}
 				} 
@@ -818,12 +823,21 @@ function visualizeit() {
 			d3.select('body').selectAll('.dialogBox')
 			.on("click", function () {
 				var Media = this.id;
+				console.log("media = " + Media);
 				if (d3.select(this).classed("dialogBoxOff")) {
 					d3.select("body").select("#swipeBack").remove();
 					d3.select("body").selectAll(".dialogBox").classed("selected",false).classed('dialogBoxOff', true);
 					d3.select(this).classed("selected", true).classed("dialogBoxOff",false);
-					if ((featuredJSON[Country][Media]).length === 1) {
-						var Name = featuredJSON[Country][Media][0].Button;//;
+					if (Object.keys(featuredJSON[Country][Media]).length === 1) {
+						console.log( featuredJSON[Country][Media]);
+						console.log( featuredJSON[Country][Media]);
+						var Name;
+						for ( x in  featuredJSON[Country][Media]){
+							console.log(x)
+							Name = x;
+						}
+			//			var Name = featuredJSON[Country][Media].button;//;
+						console.log("Conutry = " + Country + "Media = " + "Name = " + Name);
 						getHTTP(Media, Country, Name);
 					} else {
 					}
@@ -856,13 +870,13 @@ function visualizeit() {
 
 						.attr("class","dialogBoxOption")
 						.attr("id", function(i) { return "option_" + i ; })
-						.html( function(d) { return d.Button; }) 
+						.html( function(d) { return d.button; }) 
 						.on("click", function(d) {
 								
 							d3.select("#" + Media).classed("selected", true).classed("dialogBoxOff",false);
 							d3.select("body").select("#swipeBack").remove();
 
-							var Name = d.Button;
+							var Name = d.button;
 							getHTTP(Media, Country, Name);
 						
 						})
@@ -902,6 +916,7 @@ function visualizeit() {
 		}
 
 		function ov(feature) {
+					console.log("ov");
 					d3.select("#map").append("div")
 						.attr("id","ovContainer")
 						.append("div")
@@ -914,7 +929,7 @@ function visualizeit() {
 
 					d3.select("#map").select("#ovContainer").append("div")
 						.attr("id","ovHead")
-						.text(function () {  return featuredJSON[feature].fullname; } )
+						.text(function () { console.log("feature = " + feature); return featuredJSON[feature].fullname; } )
 						.append("span")
 							.style("display","inline-block")
 							.style("font-family","ssp_reg, sans-serif")
@@ -995,6 +1010,7 @@ function visualizeit() {
 
 
 		function country_clicked(d) {
+			console.log("country_clicked")
 			d3.selectAll(".popDetail, #tooltipImg, .popName").remove();
 			d3.select(".tooltip").style("opacity",0).style("width","0px");	
 			state = null;
@@ -1013,11 +1029,12 @@ function visualizeit() {
 
 		
 				
-				var zoomFactor = [1,1,0.5];
-				for(var i=0; i < zoomFactor.length; i++) {
-						xyz[i] = zoomFactor[i] * xyz[i];
-				}		
+		//		var zoomFactor = [1,1,0.5];
+	//			for(var i=0; i < zoomFactor.length; i++) {
+	//					xyz[i] = zoomFactor[i] * xyz[i];
+	//			}		
 					contentDialog(d.id);			
+			//		ov(d.id);
 			
 			//		g.selectAll( "#" + d.id ).classed(".hide");
 					zoom2ADM(d,xyz);

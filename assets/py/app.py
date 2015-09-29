@@ -330,6 +330,8 @@ def scrape():
 	with open('control.json','r') as j:
 		control = json.loads(j.read())
 	try:
+
+		
 		isocode = post_get('country')
 		story_url = post_get('Story')
 		video_url = post_get('Video')
@@ -343,11 +345,32 @@ def scrape():
 		summary = post_get('tagline')
 		regional_countrystring = (', ').join(['#' + x.strip() for x in regional_countrylist])
 		logging.warning('summary = ' + summary + ' dtype = ' + dtype + ' isocode = ' + isocode + ' active = ' + active + ' video_url = '+ video_url + ' regional countries = ' + regional_countrystring )
-#		isocode = ""
+		popup_upload = request.files.get('popup')
+		popup_name, ext = os.path.splitext(popup_upload.filename)
+		
+		
+		if ext not in ('.png','.jpg','.jpeg'):
+			return 'File extention for popup not allowed.'
+		cwd = os.getcwd()	
+		if dtype == "country":
+			
+			path = cwd + '../data/mapfiles' + isocode
+	
+		elif dtype == "regional":
+			path = cwd + '../data/mapfiles' + region_id
+
+
+		if not os.path.exists(path):
+			os.makedirs(path)
+
+		popup_upload.save(path)
+
 		message = ""
 #		for row in checklist:
 #			if country in row[1]:
 #				isocode = row[0]
+
+
 		html_doc = urllib2.urlopen(str(story_url), timeout=90)
 		
 		message = 'Content scraped and added to map'
@@ -355,22 +378,27 @@ def scrape():
 		soup = BeautifulSoup(html_doc, 'html.parser') 
 		html_doc.close()
 		body = soup.find("div", class_="post").prettify(formatter='html').encode("ascii","xmlcharrefreplace")
+		for iframe in body.find_all("iframe"):
+			iframe.replaceWith('')
+		for relinks in body.find_all(_class = "rellinks"):
+			relinks.replaceWith('') 
+
 
 		if story_url[-1] == '/':
 			story_url = story_url[:-1]
 
 		filenm = story_url.split('/')[-1].replace(' ','_')
 
-		target = open("../../_posts/" + filenm + '.html', 'w')
-	
+		target = open(path + filenm + '.html', 'w')
+		css = "<link type=\"text/css\" rel=\"Stylesheet\" href=\"assets/css/impact-blog.css\"/>" 	
 		#writing file
-		target.write(body)
+		target.write(css + body)
 		target.close()
 
 		
 		date = str(datetime.datetime.now().strftime("%Y-%m-%d"))
-		story_param ={'date' : date}
-		video_param = {'url' : video_url} 
+		story_param ={'date' : date,'button': filenm.replace('_',' ')}
+		video_param = {'url' : video_url, 'button':video_title} 
 		#writing json
 		
 #iterates through json to see if the country is use and if so if the same url has already been added. If country yes but url no add appropriate data to json. Need to write json file with html:<name of html file>
@@ -393,9 +421,9 @@ def scrape():
 						else: 
 							catID.append(x)
 						
-			control.update({isocode:{"Story":{filenm:story_param},"Video":{video_title:video_param},"catID":catID,"tagline":summary, "cat":dtype,"fullname":checkdict[isocode][0], "active":isactive}})
+			control.update({isocode:{"Story":{filenm:story_param},"Video":{video_title:video_param},"catID":catID,"popup":popup_upload.filename,"tagline":summary, "cat":dtype,"fullname":checkdict[isocode][0], "active":isactive}})
 		elif dtype == "regional":
-			control.update({region_id:{"Story":{filenm:story_param},"Video":{video_title:video_param},"tagline":summary, "cat":dtype,"fullname":region_fullname,"countries":regional_countrystring, "active":isactive}})
+			control.update({region_id:{"Story":{filenm:story_param},"Video":{video_title:video_param},"tagline":summary, "cat":dtype,"popup":popup_upload.filename,"fullname":region_fullname,"countries":regional_countrystring, "active":isactive}})
 			
 			for d in regional_countrylist:
 				if d in control:
