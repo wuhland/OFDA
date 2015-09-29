@@ -10,7 +10,7 @@
     <h2>Map Content Management</h2>
     <p>Welcome {{current_user.username}}</p>	
     <div>
-      <p><b>Image Upload Content:</b></p>
+ <!--    <p><b>Image Upload Content:</b></p>
 	  
       <form action="img_upload" method="post" enctype="multipart/form-data">
           <p><input type="file" name="popup"></p>
@@ -18,12 +18,12 @@
       </form>
 	  <div id='upload_status'><p>Ready.</p></div>
     <br />
-
+-->
     </div>
     <div>
       <p><b>Add Content To Map:</b></p>
   
-      	<form action="scrape" method="post">
+      	<form action="scrape" method="post" enctype="multipart/form-data">
   		<p><label>Active Disaster</label> <input type="checkbox" name="active" value="active" id="active"></p>
   		<p><label>Disaster Type</label><input id="type_country" class="type" type="radio" name="type" value="country" >Country
 		<input type="radio" class="type" name="type"id="type_regional" value="regional">Regional</p>
@@ -52,10 +52,12 @@
 		  <p class="regional-context" ><label>Regional Disaster Name</label> <input type="text" name="regional_name" id="fullname" /></p>
 		  <p class="regional-context" ><label>Regional Disaster ID</label> <input type="text" name="regional_id" maxlength="4" /></p>
 
-          <p><label>Story URL</label> <input type="url"  class="context" name="Story"/></p><span class="context" id="Story"  style="display: none;"> </span> 
+          <p><label>Story URL</label> <input type="url"  class="context" name="Story"/><span class="context" id="Story"  style="display: none;"> </span> </p>
           <p><label>Video URL</label> <input type="url"  class="context" name="Video" /></p> 
-		  <p><label>Video Title</label> <input type="text"  class="context" name="video_title" /></p><span class="context" id="Video"  style="display: none;"> </span> 
-          <p><label>Pop-up Summary</label> <textarea  rows="10" cols="50" class="context" name="tagline" id="tagline" /></textarea></p>
+		  <p><label>Video Title</label> <input type="text"  class="context" name="video_title" /><span class="context" id="Video"  style="display: none;"> </span></p>         
+		 <p><label>Pop-up Image</label><input type="file" name="popup"></p>
+
+         <p><label>Pop-up Summary</label> <textarea  rows="10" cols="50" class="context" name="tagline" id="tagline" /></textarea></p>
           <button type="submit" > OK </button>
       </form>
 	  <div id='scrape_status'><p>Ready.</p></div>

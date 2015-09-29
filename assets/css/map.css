@@ -1,18 +1,18 @@
 @font-face{
 font-family: 'ssp_reg';
-src: url('../fonts/SourceSansPro-Regular.otf');
+src: url('assets/fonts/SourceSansPro-Regular.otf');
 src: format('opentype');
 }
 @font-face{
 font-family: 'ssp_bold';
-src:url('../fonts/SourceSansPro-Bold.otf');
+src:url('assets/fonts/SourceSansPro-Bold.otf');
 src:format('opentype');
 font-weight:normal;
 src: format('opentype');
 }
 @font-face{
 font-family: 'ssp_semibold';
-src:url('../fonts/SourceSansPro-Semibold.otf');
+src:url('assets/fonts/SourceSansPro-Semibold.otf');
 src:format('opentype');
 font-weight:bold;
 src: format('opentype');
