@@ -70,10 +70,19 @@
 			<input type="text" id="hidden" name="hidden" style="display: none;"></div>
 			<div>{{jsonJS}} </div>
          	%for c in jsons:
-	      	<p><b>{{ jsons[c]["fullname"] }}</b></p>
+	      	<p><input type="checkbox" id={{c}} class="countryDelete"> <b>{{ jsons[c]["fullname"].upper() }}</b></p>
+				%if len(jsons[c]["Story"]) > 0: 
+				<p><span>&nbsp;&nbsp;&nbsp;&nbsp;<b>Stories</b></span>
+				%end
 	 	    	%for x in jsons[c]["Story"]:
-	        	<p><input type="checkbox" id={{x}} name={{x}} class="check">  {{x}} </p>
+	        	<p><span>&nbsp;&nbsp;&nbsp;&nbsp;</span><input type="checkbox" id={{x}} name={{x}} class={{c}}>  {{x}} </p>
 		    	%end
+				%if len(jsons[c]["Video"]) > 0: 
+				<p><span>&nbsp;&nbsp;&nbsp;&nbsp;<b>Videos</b></span>
+				%end
+				%for x in jsons[c]["Video"]:
+	        	<p><span>&nbsp;&nbsp;&nbsp;&nbsp;</span><input type="checkbox" id={{x}} name={{x}} class={{c}}>  {{x}} </p>
+				%end
 		 	%end
 		 	<button type="submit"> OK </button>
       </form> 
@@ -114,7 +123,11 @@
 				$("#regional-select").multipleSelect("setSelects",countries);		
 			}	
 		});	
-	
+		$(".countryDelete").on('change', function(){
+			if ($(this).prop('checked') == true) {
+				$('.'+ $(this).attr("id")).prop('checked',true);
+			}
+		});
 		$("#country-select").multipleSelect({
 			placeholder: "Country Disaster",
 			single: true,

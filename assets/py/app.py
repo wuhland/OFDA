@@ -480,8 +480,8 @@ def main():
 	#Start the Bottle webapp
 
 	bottle.debug(True)
-	bottle.run(app=app, host="0.0.0.0", port=8080, quite=False, reloader=True)
-#	bottle.run(app=app, host="localhost", port=8080, quite=False, reloader=True)
+#	bottle.run(app=app, host="0.0.0.0", port=8080, quite=False, reloader=True)
+	bottle.run(app=app, host="localhost", port=8080, quite=False, reloader=True)
 
 if __name__ == "__main__":
 	main()
