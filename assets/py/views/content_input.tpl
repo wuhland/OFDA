@@ -56,6 +56,8 @@
           <p><label>Video URL</label> <input type="url"  class="context" name="Video" /></p> 
 		  <p><label>Video Title</label> <input type="text"  class="context" name="video_title" /><span class="context" id="Video"  style="display: none;"> </span></p>         
 		 <p><label>Pop-up Image</label><input type="file" name="popup"></p>
+		 <p><label>Photo Gallery</label><input type="file" name="gallery"></p>
+		 <p><label>Info-Graphic</label><input type="file" name="graphic"></p>
 
          <p><label>Pop-up Summary</label> <textarea  rows="10" cols="50" class="context" name="tagline" id="tagline" /></textarea></p>
           <button type="submit" > OK </button>
@@ -77,6 +79,19 @@
 	 	    	%for x in jsons[c]["Story"]:
 	        	<p><span>&nbsp;&nbsp;&nbsp;&nbsp;</span><input type="checkbox" id={{x}} name={{x}} class={{c}}>  {{x}} </p>
 		    	%end
+				%if len(jsons[c]["Gallery"]) > 0: 
+				<p><span>&nbsp;&nbsp;&nbsp;&nbsp;<b>Photo Galleries</b></span>
+				%end
+				%for x in jsons[c]["Video"]:
+	        	<p><span>&nbsp;&nbsp;&nbsp;&nbsp;</span><input type="checkbox" id={{x}} name={{x}} class={{c}}>  {{x}} </p>
+				%end
+				%if len(jsons[c]["Infographic"]) > 0: 
+				<p><span>&nbsp;&nbsp;&nbsp;&nbsp;<b>Infographics</b></span>
+				%end
+				%for x in jsons[c]["Video"]:
+	        	<p><span>&nbsp;&nbsp;&nbsp;&nbsp;</span><input type="checkbox" id={{x}} name={{x}} class={{c}}>  {{x}} </p>
+				%end
+
 				%if len(jsons[c]["Video"]) > 0: 
 				<p><span>&nbsp;&nbsp;&nbsp;&nbsp;<b>Videos</b></span>
 				%end
@@ -111,22 +126,22 @@
 					$("#active").prop('checked', false);
 				}
 				for (x in jsonJS[this.value]) {
-					console.log(x);
 					$("#" + x).text(JSON.stringify(jsonJS[this.value][x])).val(jsonJS[this.value][x]).show();  
 				}
-				console.log(jsonJS[this.value]["countries"]);
 				var countries = jsonJS[this.value]["countries"].split(",")
-				console.log(countries.toString());
 				countries = countries.map(function(d) {return d.replace(/#| /gi,'')});
 				
-				console.log(countries);
 				$("#regional-select").multipleSelect("setSelects",countries);		
 			}	
 		});	
 		$(".countryDelete").on('change', function(){
 			if ($(this).prop('checked') == true) {
 				$('.'+ $(this).attr("id")).prop('checked',true);
+			
+			} else if ($(this).prop('checked') == false) {
+				$('.'+ $(this).attr("id")).prop('checked',false);
 			}
+
 		});
 		$("#country-select").multipleSelect({
 			placeholder: "Country Disaster",
@@ -215,7 +230,6 @@
                 $("div#scrape_status").css("background-color", "#fff0f0");
                 $("div#scrape_status p").text(j.msg);
               }
-//              $("div#scrape_status").delay(800).fadeOut(500);
             }, "json");
             return false;
 				

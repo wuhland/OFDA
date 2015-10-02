@@ -357,6 +357,10 @@ def scrape():
 		regional_countrystring = (', ').join(['#' + x.strip() for x in regional_countrylist])
 		logging.warning('summary = ' + summary + ' dtype = ' + dtype + ' isocode = ' + isocode + ' active = ' + active + ' video_url = '+ video_url + ' regional countries = ' + regional_countrystring )
 		popup_upload = request.files.get('popup')
+		gallery_upload = request.files.get('gallery')
+		graphic_upload = request.files.get('graphic')
+		gallery_name = post_get('gallery-name')
+		graphic_name = post_get('graphic-name')
 #	Check to see if Region selected
 		if isocode == '' and region_id == '':
 			return 'You havent selected a country or region'	
@@ -382,6 +386,26 @@ def scrape():
 			popup_upload.save(path +"/popimg.png" ,overwrite=True)
 		else:
 			popup_name=""
+
+		if gallery_upload != None:
+			name, ext = os.path.splitext(gallery_upload.filename)
+			if ext not in ('.html'):
+				return 'File extention for gallery not allowed.'
+			gallery_filename = gallery_upload.filename
+			gallery_upload.save(path +"/" + gallery_upload.filename,overwrite=True)
+		else:
+			gallery_filename=""
+
+		if graphic_upload != None:
+			name, ext = os.path.splitext(graphic_upload.filename)
+			if ext not in ('.png','.jpg','.jpeg', '.pdf'):
+				return 'File extention for graphic not allowed.'
+			graphic_upload.save(path +"/" + graphic_upload.filename,overwrite=True)
+			graphic_filename =  graphic_upload.filename
+		else:
+			graphic_filename=""
+
+
 		message = ""
 #		for row in checklist:
 #			if country in row[1]:
@@ -417,6 +441,8 @@ def scrape():
 		date = str(datetime.datetime.now().strftime("%Y-%m-%d"))
 		story_param ={'date' : date,'button': filenm.replace('_',' ')}
 		video_param = {'url' : video_url, 'button':video_title} 
+		gallery_param = {'filename' : gallery_filename, 'button': gallery_name}
+		graphic_param = {'filename' : graphic_filename, 'button': graphic_name}
 		#writing json
 		
 #iterates through json to see if the country is use and if so if the same url has already been added. If country yes but url no add appropriate data to json. Need to write json file with html:<name of html file>
@@ -440,11 +466,10 @@ def scrape():
 							catID.append(x)
 			
 						
-			control.update({isocode:{"Story":{filenm:story_param},"Video":{video_title:video_param},"catID":catID,"tagline":summary, "cat":dtype,"fullname":checkdict[isocode][0], "active":isactive}})
+			control.update({isocode:{"Story":{filenm:story_param},"Gallery":{gallery_name.replace(" ","_"):gallery_param},"Infographic":{graphic_name.replace(" ","_"):graphic_param},"Video":{video_title:video_param},"catID":catID,"tagline":summary, "cat":dtype,"fullname":checkdict[isocode][0], "active":isactive}})
+
 		elif dtype == "regional":
-		
-		
-			control.update({region_id:{"Story":{filenm:story_param},"Video":{video_title:video_param},"tagline":summary, "cat":dtype,"fullname":region_fullname,"countries":regional_countrystring, "active":isactive}})
+			control.update({region_id:{"Story":{filenm:story_param},"Gallery":{gallery_name.replace(" ","_"):gallery_param},"Infographic":{graphic_name.replace(" ","_"):graphic_param},"Video":{video_title:video_param},"tagline":summary, "cat":dtype,"fullname":region_fullname,"countries":regional_countrystring, "active":isactive}})
 			
 			for d in regional_countrylist:
 				if d in control:
@@ -455,7 +480,7 @@ def scrape():
 					else: 
 						control[d]["catID"].append(region_id)
 				else:
-					control.update({d:{"Story":{},"Video":{},"tagline":"", "cat":"country","fullname":checkdict[d][0],"catID":[region_id], "active":"inactive"}})
+					control.update({d:{"Story":{},"Gallery":{},"Infographic":{},"Video":{},"tagline":"", "cat":"country","fullname":checkdict[d][0],"catID":[region_id], "active":"inactive"}})
 	
 		with open('control.json','w') as j:
 			j.write(json.dumps(control, ensure_ascii=False).encode('utf8'))
@@ -480,8 +505,8 @@ def main():
 	#Start the Bottle webapp
 
 	bottle.debug(True)
-#	bottle.run(app=app, host="0.0.0.0", port=8080, quite=False, reloader=True)
-	bottle.run(app=app, host="localhost", port=8080, quite=False, reloader=True)
+	bottle.run(app=app, host="0.0.0.0", port=8080, quite=False, reloader=True)
+#	bottle.run(app=app, host="localhost", port=8080, quite=False, reloader=True)
 
 if __name__ == "__main__":
 	main()
