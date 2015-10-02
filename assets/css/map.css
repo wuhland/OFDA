@@ -58,11 +58,10 @@ stroke: hsla(360,0%,20%,1);
 }
 
 .featured { 
-	fill: #FFCB36;
 	cursor:pointer;
 }
 .notFeatured {
-	fill: #CFCDC9;
+	fill: #CFCDC9; 
 }
 
 .boundary {
@@ -250,6 +249,7 @@ stroke: hsla(360,0%,20%,1);
 }
 
 .tooltip {
+	
 	position: absolute;
 	z-index: 2;
 	visibility:hidden;
@@ -262,10 +262,11 @@ stroke: hsla(360,0%,20%,1);
 	width:100%;
 	overflow-x:hidden;
 	overflow-y:auto;
-	
+	max-height: 300px;
 }
 
 .popName {
+	margin: 5px 0px;
 	font-family: 'ssp_bold', sans-serif;
 	font-weight:800;
 	font-size:20px;
@@ -282,6 +283,7 @@ stroke: hsla(360,0%,20%,1);
 	width:auto;
 }
 .popDetail {
+	margin: 5px 0px;
 	font-family: 'ssp_reg', sans-serif;
 	font-weight:400;
 	font-size: 15px;

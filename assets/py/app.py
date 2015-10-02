@@ -9,6 +9,7 @@
 
 from bottle import Bottle, run, post, request, static_file
 from bs4 import BeautifulSoup
+import boto3 as boto
 import sys
 import os
 import urllib2
@@ -26,7 +27,17 @@ logging.basicConfig(format='localhost - - [%(asctime)s] %(message)s', level=logg
 log = logging.getLogger(__name__)
 bottle.debug(True)
 
+
+#boto commands
+#s3 = boto.connect_s3()
+#bucket = s3.get_bucket('ofda-map')
+
+
 # Use users.json and roles.json in the local example_conf directory
+
+s3 = boto.resource('s3')
+bucket = s3.Bucket('ofda-map')
+
 aaa = Cork('users', email_sender='ofdamap@gmail.com', smtp_url='starttls://ofdamap:vbxnlrzbqmkfaezc@smtp.gmail.com:587')
 
 app = bottle.app()
@@ -64,6 +75,7 @@ checkdict = OrderedDict(sorted(checkdict.items(), key=lambda t: t[1][0]))
 #############################
 # #  Bottle methods  # #
 
+	
 def postd():
     return bottle.request.forms
 
@@ -340,48 +352,54 @@ def scrape():
 		video_title = post_get('video_title')
 		region_fullname = post_get('regional_name')
 		regional_countrylist = post_getall('regional-countries')
-		logging.warning('regional_countrylist = ' + str(regional_countrylist))
 		region_id = post_get('regional_id')
 		summary = post_get('tagline')
 		regional_countrystring = (', ').join(['#' + x.strip() for x in regional_countrylist])
 		logging.warning('summary = ' + summary + ' dtype = ' + dtype + ' isocode = ' + isocode + ' active = ' + active + ' video_url = '+ video_url + ' regional countries = ' + regional_countrystring )
 		popup_upload = request.files.get('popup')
-		popup_name, ext = os.path.splitext(popup_upload.filename)
-		
-		
-		if ext not in ('.png','.jpg','.jpeg'):
-			return 'File extention for popup not allowed.'
-		cwd = os.getcwd()	
-		if dtype == "country":
-			
-			path = cwd + '../data/mapfiles' + isocode
+#	Check to see if Region selected
+		if isocode == '' and region_id == '':
+			return 'You havent selected a country or region'	
 	
+		cwd = os.getcwd()	
+		logging.warning(regional_countrylist);
+		if dtype == "country":
+			path = cwd + '/../data/mapfiles/' + isocode
+	
+			logging.warning(path);
 		elif dtype == "regional":
-			path = cwd + '../data/mapfiles' + region_id
+			path = cwd + '/../data/mapfiles/' + region_id
 
+	
 
 		if not os.path.exists(path):
 			os.makedirs(path)
 
-		popup_upload.save(path)
-
+		if popup_upload != None:
+			popup_name, ext = os.path.splitext(popup_upload.filename)
+			if ext not in ('.png','.jpg','.jpeg'):
+				return 'File extention for popup not allowed.'
+			popup_upload.save(path +"/popimg.png" ,overwrite=True)
+		else:
+			popup_name=""
 		message = ""
 #		for row in checklist:
 #			if country in row[1]:
 #				isocode = row[0]
-
+		
 
 		html_doc = urllib2.urlopen(str(story_url), timeout=90)
 		
 		message = 'Content scraped and added to map'
 
-		soup = BeautifulSoup(html_doc, 'html.parser') 
+		soup = BeautifulSoup(html_doc, 'html.parser')
 		html_doc.close()
+		for iframe in soup.find_all("iframe"):
+			iframe.replace_with('')
+		for relinks in soup.find_all("div", {"class" : "rellinks"}):
+			relinks.replace_with('') 
 		body = soup.find("div", class_="post").prettify(formatter='html').encode("ascii","xmlcharrefreplace")
-		for iframe in body.find_all("iframe"):
-			iframe.replaceWith('')
-		for relinks in body.find_all(_class = "rellinks"):
-			relinks.replaceWith('') 
+
 
 
 		if story_url[-1] == '/':
@@ -389,7 +407,7 @@ def scrape():
 
 		filenm = story_url.split('/')[-1].replace(' ','_')
 
-		target = open(path + filenm + '.html', 'w')
+		target = open(path + "/" +  filenm + '.html', 'w')
 		css = "<link type=\"text/css\" rel=\"Stylesheet\" href=\"assets/css/impact-blog.css\"/>" 	
 		#writing file
 		target.write(css + body)
@@ -420,13 +438,18 @@ def scrape():
 							pass
 						else: 
 							catID.append(x)
+			
 						
-			control.update({isocode:{"Story":{filenm:story_param},"Video":{video_title:video_param},"catID":catID,"popup":popup_upload.filename,"tagline":summary, "cat":dtype,"fullname":checkdict[isocode][0], "active":isactive}})
+			control.update({isocode:{"Story":{filenm:story_param},"Video":{video_title:video_param},"catID":catID,"tagline":summary, "cat":dtype,"fullname":checkdict[isocode][0], "active":isactive}})
 		elif dtype == "regional":
-			control.update({region_id:{"Story":{filenm:story_param},"Video":{video_title:video_param},"tagline":summary, "cat":dtype,"popup":popup_upload.filename,"fullname":region_fullname,"countries":regional_countrystring, "active":isactive}})
+		
+		
+			control.update({region_id:{"Story":{filenm:story_param},"Video":{video_title:video_param},"tagline":summary, "cat":dtype,"fullname":region_fullname,"countries":regional_countrystring, "active":isactive}})
 			
 			for d in regional_countrylist:
 				if d in control:
+					if control[d]["active"] != "active":
+						control[d]["active"] = isactive
 					if region_id in control[d]["catID"]:
 						pass
 					else: 
@@ -437,6 +460,14 @@ def scrape():
 		with open('control.json','w') as j:
 			j.write(json.dumps(control, ensure_ascii=False).encode('utf8'))
 
+		
+		#writes to s3 bucket
+#		bucket.put_object(
+#			ACL='public-read',
+#			Body=json.dumps(control, ensure_ascii=False).encode('utf8'),
+#			Key="control"
+#			
+#		)	
 
 		return dict(ok=True, msg='')
 	except Exception, e:
