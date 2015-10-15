@@ -842,10 +842,11 @@ function visualizeit() {
 				var accepted = ["Story","Video","Infographic","Gallery"];
 				var medias = [];
 				for (obj in value) {
-					if(accepted.indexOf(obj) > -1 && Object.keys(obj).length > 0) {
+					if(accepted.indexOf(obj) > -1 && Object.keys(featuredJSON[Country][obj]).length > 0) {
 						medias.push(obj);
 					}
-				} 
+				}
+				console.log('medias = ' + medias) 
 				return medias;
 			}
 			dialogOptionBoolean = 0;
@@ -887,7 +888,6 @@ function visualizeit() {
 						for ( x in  featuredJSON[Country][Media]){
 							Name = x;
 						}
-			//			var Name = featuredJSON[Country][Media].button;//;
 						getHTTP(Media, Country, Name);
 					} else {
 					}
@@ -917,18 +917,14 @@ function visualizeit() {
 						.data(options)
 						.enter()
 						.append("div")
-
 						.attr("class","dialogBoxOption")
 						.attr("id", function(i) { return "option_" + i ; })
 						.html( function(d) { return d.button; }) 
 						.on("click", function(d) {
-								
 							d3.select("#" + Media).classed("selected", true).classed("dialogBoxOff",false);
 							d3.select("body").select("#swipeBack").remove();
-
 							var Name = d.button;
 							getHTTP(Media, Country, Name);
-						
 						})
 						.on("click.stop", function() {d3.event.stopPropagation(); })
 						.on("mouseover", function () {
@@ -942,8 +938,6 @@ function visualizeit() {
 							setTimeout(function() {testDialog(dialogOptionBoolean, Media);}, 0);
 							})
 						.on("mouseout.stop", function() {d3.event.stopPropagation(); });
-
-
 					}
 			})
 			.on("mouseout", function () {
@@ -1073,20 +1067,7 @@ function visualizeit() {
 			if (d && country !== d) {
 				var xyz = get_xyz(d);
 				country = d;
-		
-
-
-
-		
-				
-		//		var zoomFactor = [1,1,0.5];
-	//			for(var i=0; i < zoomFactor.length; i++) {
-	//					xyz[i] = zoomFactor[i] * xyz[i];
-	//			}		
 					contentDialog(d.id);			
-			//		ov(d.id);
-			
-			//		g.selectAll( "#" + d.id ).classed(".hide");
 					zoom2ADM(d,xyz);
 					return;
 			} else {

@@ -363,23 +363,28 @@ def scrape():
 		graphic_name = post_get('graphic-name')
 #	Check to see if Region selected
 		if isocode == '' and region_id == '':
-			return 'You havent selected a country or region'	
-	
-		cwd = os.getcwd()	
-		logging.warning(regional_countrylist);
-		if dtype == "country":
-			path = cwd + '/../data/mapfiles/' + isocode
-	
-			logging.warning(path);
-		elif dtype == "regional":
-			path = cwd + '/../data/mapfiles/' + region_id
+			return 'You havent selected a country or region'
 
 	
+
+		if isocode != '':
+			idnum = isocode
+		elif region_id != '':
+			idnum = region_id
+
+		
+
+	
+		cwd = os.getcwd()	
+		path = cwd + '/../data/mapfiles/' + idnum
+	
+
 
 		if not os.path.exists(path):
 			os.makedirs(path)
 
 		if popup_upload != None:
+			logging.warning('popup_upload worked')
 			popup_name, ext = os.path.splitext(popup_upload.filename)
 			if ext not in ('.png','.jpg','.jpeg'):
 				return 'File extention for popup not allowed.'
@@ -389,20 +394,30 @@ def scrape():
 
 		if gallery_upload != None:
 			name, ext = os.path.splitext(gallery_upload.filename)
+			if gallery_name == '':
+				return 'Please give the gallery a name'
 			if ext not in ('.html'):
 				return 'File extention for gallery not allowed.'
 			gallery_filename = gallery_upload.filename
 			gallery_upload.save(path +"/" + gallery_upload.filename,overwrite=True)
+			gallery_param = {gallery_name.replace(" ","_"):{'filename' : gallery_filename, 'button': gallery_name}}
 		else:
 			gallery_filename=""
+			gallery_param = {}
 
 		if graphic_upload != None:
 			name, ext = os.path.splitext(graphic_upload.filename)
+			if graphic_name == '':
+				return 'Please give the graphic a name' 
 			if ext not in ('.png','.jpg','.jpeg', '.pdf'):
 				return 'File extention for graphic not allowed.'
+			
+			graphic_upload.save(path +"/" + graphic_upload.filename,overwrite=True)
 			graphic_upload.save(path +"/" + graphic_upload.filename,overwrite=True)
 			graphic_filename =  graphic_upload.filename
+			graphic_param = {graphic_name.replace(" ","_"):{'filename' : graphic_filename, 'button': graphic_name}}
 		else:
+			graphic_param = {}
 			graphic_filename=""
 
 
@@ -425,7 +440,6 @@ def scrape():
 		body = soup.find("div", class_="post").prettify(formatter='html').encode("ascii","xmlcharrefreplace")
 
 
-
 		if story_url[-1] == '/':
 			story_url = story_url[:-1]
 
@@ -437,12 +451,16 @@ def scrape():
 		target.write(css + body)
 		target.close()
 
-		
 		date = str(datetime.datetime.now().strftime("%Y-%m-%d"))
-		story_param ={'date' : date,'button': filenm.replace('_',' ')}
-		video_param = {'url' : video_url, 'button':video_title} 
-		gallery_param = {'filename' : gallery_filename, 'button': gallery_name}
-		graphic_param = {'filename' : graphic_filename, 'button': graphic_name}
+		if story_url != '':
+			story_param ={filenm:{'date': date,'button': filenm.replace('_',' ')}}
+		else: 
+			story_param = {}
+		if video_url != '':
+			video_param = {video_title:{'url' : video_url, 'button':video_title}} 
+		else: 
+			video_param = {}
+	
 		#writing json
 		
 #iterates through json to see if the country is use and if so if the same url has already been added. If country yes but url no add appropriate data to json. Need to write json file with html:<name of html file>
@@ -453,6 +471,7 @@ def scrape():
 		else:
 			isactive = "inactive"
 
+		control.update({idnum:{"Story":story_param,"Gallery":gallery_param,"Infographic":graphic_param,"Video":video_param,"tagline":summary, "cat":dtype, "active":isactive}})
 
 		if dtype == "country":
 			catID = []
@@ -465,11 +484,11 @@ def scrape():
 						else: 
 							catID.append(x)
 			
+			control[idnum].update({"fullname":checkdict[idnum][0],"catID":catID})
 						
-			control.update({isocode:{"Story":{filenm:story_param},"Gallery":{gallery_name.replace(" ","_"):gallery_param},"Infographic":{graphic_name.replace(" ","_"):graphic_param},"Video":{video_title:video_param},"catID":catID,"tagline":summary, "cat":dtype,"fullname":checkdict[isocode][0], "active":isactive}})
 
 		elif dtype == "regional":
-			control.update({region_id:{"Story":{filenm:story_param},"Gallery":{gallery_name.replace(" ","_"):gallery_param},"Infographic":{graphic_name.replace(" ","_"):graphic_param},"Video":{video_title:video_param},"tagline":summary, "cat":dtype,"fullname":region_fullname,"countries":regional_countrystring, "active":isactive}})
+			control[idnum].update({"fullname":region_fullname,"countries":regional_countrystring})
 			
 			for d in regional_countrylist:
 				if d in control:

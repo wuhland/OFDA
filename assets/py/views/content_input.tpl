@@ -49,16 +49,17 @@
 		%end
 		</select>
 		  
-		  <p class="regional-context" ><label>Regional Disaster Name</label> <input type="text" name="regional_name" id="fullname" /></p>
-		  <p class="regional-context" ><label>Regional Disaster ID</label> <input type="text" name="regional_id" maxlength="4" /></p>
+		 <p class="regional-context" ><label>Regional Disaster Name</label> <input type="text" name="regional_name" id="fullname" /></p>
+		 <p class="regional-context" ><label>Regional Disaster ID</label> <input type="text" name="regional_id" maxlength="4" /></p>
 
-          <p><label>Story URL</label> <input type="url"  class="context" name="Story"/><span class="context" id="Story"  style="display: none;"> </span> </p>
-          <p><label>Video URL</label> <input type="url"  class="context" name="Video" /></p> 
-		  <p><label>Video Title</label> <input type="text"  class="context" name="video_title" /><span class="context" id="Video"  style="display: none;"> </span></p>         
+         <p><label>Story URL</label> <input type="url"  class="context" name="Story"/><span class="context" id="Story"  style="display: none;"> </span> </p>
+         <p><label>Video URL</label> <input type="url"  class="context" name="Video" /></p> 
+		 <p><label>Video Title</label> <input type="text"  class="context" name="video_title" /><span class="context" id="Video"  style="display: none;"> </span></p>         
 		 <p><label>Pop-up Image</label><input type="file" name="popup"></p>
-		 <p><label>Photo Gallery</label><input type="file" name="gallery"></p>
-		 <p><label>Info-Graphic</label><input type="file" name="graphic"></p>
-
+		 <p><label>Photo Gallery Title</label> <input type="text"  class="context" name="gallery-name" /></p> 
+		 <p><label>Photo Gallery</label><input type="file" name="gallery"><span class="context" id="Gallery"  style="display: none;"> </span></p>
+		 <p><label>Infographic Title</label> <input type="text"  class="context" name="graphic-name" /></p> 
+		 <p><label>Infographic</label><input type="file" name="graphic"><span class="context" id="Graphic"  style="display: none;"> </span></p><button type='button' id='clear-uploads' >Clear Upload Inputs</button>
          <p><label>Pop-up Summary</label> <textarea  rows="10" cols="50" class="context" name="tagline" id="tagline" /></textarea></p>
           <button type="submit" > OK </button>
       </form>
@@ -74,29 +75,28 @@
          	%for c in jsons:
 	      	<p><input type="checkbox" id={{c}} class="countryDelete"> <b>{{ jsons[c]["fullname"].upper() }}</b></p>
 				%if len(jsons[c]["Story"]) > 0: 
-				<p><span>&nbsp;&nbsp;&nbsp;&nbsp;<b>Stories</b></span>
-				%end
-	 	    	%for x in jsons[c]["Story"]:
-	        	<p><span>&nbsp;&nbsp;&nbsp;&nbsp;</span><input type="checkbox" id={{x}} name={{x}} class={{c}}>  {{x}} </p>
+					<p><span>&nbsp;&nbsp;&nbsp;&nbsp;<b>Stories</b></span>
+	 	    		%for x in jsons[c]["Story"]:
+	        		<p><span>&nbsp;&nbsp;&nbsp;&nbsp;</span><input type="checkbox" id={{x}} name={{x}} class={{c}}>  {{x}} </p>
+					%end
 		    	%end
 				%if len(jsons[c]["Gallery"]) > 0: 
-				<p><span>&nbsp;&nbsp;&nbsp;&nbsp;<b>Photo Galleries</b></span>
-				%end
-				%for x in jsons[c]["Video"]:
-	        	<p><span>&nbsp;&nbsp;&nbsp;&nbsp;</span><input type="checkbox" id={{x}} name={{x}} class={{c}}>  {{x}} </p>
+					<p><span>&nbsp;&nbsp;&nbsp;&nbsp;<b>Photo Galleries</b></span>
+					%for x in jsons[c]["Video"]:
+	        		<p><span>&nbsp;&nbsp;&nbsp;&nbsp;</span><input type="checkbox" id={{x}} name={{x}} class={{c}}>  {{x}} </p>
+					%end
 				%end
 				%if len(jsons[c]["Infographic"]) > 0: 
 				<p><span>&nbsp;&nbsp;&nbsp;&nbsp;<b>Infographics</b></span>
+					%for x in jsons[c]["Video"]:
+	        		<p><span>&nbsp;&nbsp;&nbsp;&nbsp;</span><input type="checkbox" id={{x}} name={{x}} class={{c}}>  {{x}} </p>
+					%end
 				%end
-				%for x in jsons[c]["Video"]:
-	        	<p><span>&nbsp;&nbsp;&nbsp;&nbsp;</span><input type="checkbox" id={{x}} name={{x}} class={{c}}>  {{x}} </p>
-				%end
-
 				%if len(jsons[c]["Video"]) > 0: 
 				<p><span>&nbsp;&nbsp;&nbsp;&nbsp;<b>Videos</b></span>
-				%end
-				%for x in jsons[c]["Video"]:
-	        	<p><span>&nbsp;&nbsp;&nbsp;&nbsp;</span><input type="checkbox" id={{x}} name={{x}} class={{c}}>  {{x}} </p>
+					%for x in jsons[c]["Video"]:
+	        		<p><span>&nbsp;&nbsp;&nbsp;&nbsp;</span><input type="checkbox" id={{x}} name={{x}} class={{c}}>  {{x}} </p>
+					%end
 				%end
 		 	%end
 		 	<button type="submit"> OK </button>
@@ -143,6 +143,10 @@
 			}
 
 		});
+		$("#clear-uploads").on('click' , function(){
+			$('input:file').val('');
+		})	
+
 		$("#country-select").multipleSelect({
 			placeholder: "Country Disaster",
 			single: true,
