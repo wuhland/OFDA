@@ -73,29 +73,31 @@
 			<input type="text" id="hidden" name="hidden" style="display: none;"></div>
 			<div>{{jsonJS}} </div>
          	%for c in jsons:
-	      	<p><input type="checkbox" id={{c}} class="countryDelete"> <b>{{ jsons[c]["fullname"].upper() }}</b></p>
+		
+	      	<p><input type="checkbox" id={{c}} name="countryDelete" class="check countryDelete"> <b>{{ jsons[c]["fullname"].upper() }}</b></p>
+				% classy = str(c.strip('/"') + ' media')
 				%if len(jsons[c]["Story"]) > 0: 
 					<p><span>&nbsp;&nbsp;&nbsp;&nbsp;<b>Stories</b></span>
 	 	    		%for x in jsons[c]["Story"]:
-	        		<p><span>&nbsp;&nbsp;&nbsp;&nbsp;</span><input type="checkbox" id={{x}} name={{x}} class={{c}}>  {{x}} </p>
+	        		<p><span>&nbsp;&nbsp;&nbsp;&nbsp;</span><input type="checkbox" id= {{x}} name="Story" class={{classy}} > {{x}} </p>
 					%end
 		    	%end
 				%if len(jsons[c]["Gallery"]) > 0: 
 					<p><span>&nbsp;&nbsp;&nbsp;&nbsp;<b>Photo Galleries</b></span>
 					%for x in jsons[c]["Video"]:
-	        		<p><span>&nbsp;&nbsp;&nbsp;&nbsp;</span><input type="checkbox" id={{x}} name={{x}} class={{c}}>  {{x}} </p>
+	        		<p><span>&nbsp;&nbsp;&nbsp;&nbsp;</span><input type="checkbox" id={{x}} name="Gallery" class={{classy}}> {{x}} </p>
 					%end
 				%end
 				%if len(jsons[c]["Infographic"]) > 0: 
 				<p><span>&nbsp;&nbsp;&nbsp;&nbsp;<b>Infographics</b></span>
 					%for x in jsons[c]["Video"]:
-	        		<p><span>&nbsp;&nbsp;&nbsp;&nbsp;</span><input type="checkbox" id={{x}} name={{x}} class={{c}}>  {{x}} </p>
+	        		<p><span>&nbsp;&nbsp;&nbsp;&nbsp;</span><input type="checkbox" id={{x}} name="Infographic"  class={{classy}}> {{x}} </p>
 					%end
 				%end
 				%if len(jsons[c]["Video"]) > 0: 
 				<p><span>&nbsp;&nbsp;&nbsp;&nbsp;<b>Videos</b></span>
 					%for x in jsons[c]["Video"]:
-	        		<p><span>&nbsp;&nbsp;&nbsp;&nbsp;</span><input type="checkbox" id={{x}} name={{x}} class={{c}}>  {{x}} </p>
+	        		<p><span>&nbsp;&nbsp;&nbsp;&nbsp;</span><input type="checkbox" id={{x}} name="Video"  class={{classy}}> {{x}} </p>
 					%end
 				%end
 		 	%end
@@ -204,13 +206,35 @@
 		$("form#delete_content").submit(function() {
 			$("div#delete_status").fadeIn(100);
             z = $(this);
-			var files = [];
 			$(".check:checked").each(function(){
-				files.push($(this).attr("id"));
+				var mediaTypes = ["Video","Story","Infographic","Gallery"];
+				console.log('yes')
+				if ($(this).hasClass('countryDelete')) {
+					console.log('inside');
+					console.log($(this).id);
+					delete jsonJS[$(this).id];
+				} else if (jsonJS.hasOwnProperty($(this).attr('class'))) {
+					delete jsonJS[$(this).attr('class')][$(this).name][$(this).id];
+				}  
+				
+			/*	if ($(this).name == 'countryDelete'){
+					files[$(this).id] = {'delete':'yes','Video':[],'Story':[],'Gallery':[],'Infographic':[]};
+					
+				} else {
+					if ($(this).attr('class') in files)
+						files[$(this).attr('class')][$(this).name].push($(this).id)
+					} else {
+						files[$(this).attr('class')] = {$(this).name $(this).id)
+				}
+*/
 			});
-			$("#hidden").val(files.toString());
+			console.log('outside')
+			console.log(jsonJS);
+			debugger;
+			$("#hidden").val(jsonJS.toString());
 
             $.post($(this).attr('action'), $(this).serialize(), function(j){
+				console.log($(this).serialize());
               if (j.ok) {
                 $("div#delete_status").css("background-color", "#f0fff0");
                 $("div#delete_status p").text('Ok.');

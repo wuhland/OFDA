@@ -271,37 +271,6 @@ def img_upload():
 
 
 
-@bottle.post('/delete_content')
-def delete_content():
-		
-		
-	try:
-		with open('control.json','r') as j:
-			control = json.loads(j.read())
-			postcontrol = deepcopy(control)
-
-#		content = re.sub(bottle.request.json(),'=on','').split('&')
-		string = (post_get("hidden"))
-		files = string.split(",")
-		for x in files:
-			os.remove('../../_posts/' + x + '.html')
-		
-			for key, value in control.iteritems():
-				if control[key]["Story"].get(x):
-					if len(control[key]["Story"]) < 2:
-						del postcontrol[key]
-					else:
-						del postcontrol[key]["Story"][x]
-		
-
-		
-
-		with open('control.json','w') as j:
-			j.write(json.dumps(postcontrol, ensure_ascii=False).encode('utf8'))
-
-		return dict(ok=True, msg= '')
-	except Exception as e:
-		return dict(ok=False, msg=e)
 
 
 		
@@ -336,6 +305,36 @@ def serve_css(filename):
 @bottle.route('/<filename:re:.*\.html>')
 def serve_map(filename):
 	return static_file(filename, root='../../')
+
+@bottle.post('/delete_content')
+def delete_content():
+	try:
+		with open('control.json','r') as j:
+			control = json.loads(j.read())
+			postcontrol = deepcopy(control)
+#		content = re.sub(bottle.request.json(),'=on','').split('&')
+		string = (post_get("hidden"))
+		logging.error(string)
+		files = string.split(",")
+#		for x in files:
+#			os.remove('../../_posts/' + x + '.html')
+		
+#			for key, value in control.iteritems():
+#				if control[key]["Story"].get(x):
+#					if len(control[key]["Story"]) < 2:
+#						del postcontrol[key]
+#					else:
+#						del postcontrol[key]["Story"][x]
+#		
+
+		
+
+#		with open('control.json','w') as j:
+#			j.write(json.dumps(postcontrol, ensure_ascii=False).encode('utf8'))
+
+		return dict(ok=True, msg= '')
+	except Exception as e:
+		return dict(ok=False, msg=e)
 
 @bottle.post('/scrape')
 def scrape():
