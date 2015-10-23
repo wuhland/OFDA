@@ -75,11 +75,11 @@
          	%for c in jsons:
 		
 	      	<p><input type="checkbox" id={{c}} name="countryDelete" class="check countryDelete"> <b>{{ jsons[c]["fullname"].upper() }}</b></p>
-				% classy = str(c.strip('/"') + ' media')
+				% classy = c.strip('"') + " media"
 				%if len(jsons[c]["Story"]) > 0: 
 					<p><span>&nbsp;&nbsp;&nbsp;&nbsp;<b>Stories</b></span>
 	 	    		%for x in jsons[c]["Story"]:
-	        		<p><span>&nbsp;&nbsp;&nbsp;&nbsp;</span><input type="checkbox" id= {{x}} name="Story" class={{classy}} > {{x}} </p>
+	        		<p><span>&nbsp;&nbsp;&nbsp;&nbsp;</span><input type="checkbox" id="{{ x }}" name="Story" class="{{ classy }}" > {{x}} </p>
 					%end
 		    	%end
 				%if len(jsons[c]["Gallery"]) > 0: 
